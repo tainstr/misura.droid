@@ -19,7 +19,7 @@ class Conf(PersistentConf):
         PersistentConf.__init__(self, conf_dir=conf_dir)
         option.Conf.__init__(self, desc=desc, empty=empty)
         self.buffer_length = buffer_length
-        from misura import share
+        from misura.droid import share
 #       print 'initializing data.Conf',len(desc)
         self.desc = dirshelf.DirShelf(basedir=share.dbpath, desc=desc)
         self.kid_base = str(id(self))

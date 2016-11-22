@@ -47,7 +47,7 @@ class ProcessProxy(object):
         self._log_owner = 'ProcessProxy'
         self._protect.update(dir(self))
         self._sockets = {}
-        from misura import share
+        from misura.droid import share
         self._log = share.FileBufferLogger()
         self._restarts = Value('i')
         self._restarts.value = 0
@@ -95,7 +95,7 @@ class ProcessProxy(object):
         self._sockets = {}
         self._process = None
         self._unpickled = True
-        from misura import share
+        from misura.droid import share
         self._log = share.FileBufferLogger()
         self._restarts = Value('i')
         self._restarts.value = 0        

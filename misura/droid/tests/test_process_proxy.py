@@ -76,24 +76,11 @@ class TestProcessProxy(unittest.TestCase):
         pp._stop()
         
     def test_unpicklable_init(self):
-        from misura import share
+        from misura.droid import share
         share.init()
         self.test_unpicklable_noinit()
         share.stop()   
-        
-        
-        
-    def old(self):
-    
-        print pp.get('a')
-        print pp.get('b')
-        pp.set('a', 3)
-        print pp.get('a')
-        os.remove(pp._path + '/pid')
-        sleep(1)
-        pp._process.terminate()
-        print '###############'
-        
+             
     def test_manager(self):
         pm = ProcessProxyManager()
         pm.register('DummyCallable', DummyCallable)

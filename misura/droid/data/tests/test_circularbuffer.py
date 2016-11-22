@@ -1,11 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import unittest
-from misura import utils_testing
-from misura import data, device
-from misura.canon import csutil
-from time import sleep
 import numpy as np
+
+from misura.droid import data
+from misura.canon import csutil
 
 rd = np.random.random
 
