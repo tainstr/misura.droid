@@ -8,7 +8,7 @@ import struct
 import random
 import os
 
-from misura import utils_testing
+#from misura import utils_testing
 from misura.droid import data
 from misura.canon import option
 

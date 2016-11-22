@@ -7,21 +7,18 @@ import os
 import exceptions
 from time import time, sleep
 
-from misura import utils_testing as ut
-from misura import share
+#from misura import utils_testing as ut
+#from misura import share
 from misura.droid.data import dirshelf
 from misura.droid import utils
 
-
-dr = ut.params.tmpdir + 'testfb/'
-p = dr + 'test'
 props = {'a': {'handle': 'a', 'type': 'Object', 'current': [1, 2]}}
 
 
 class DirShelf(unittest.TestCase):
 
     def setUp(self):
-        self.d = dirshelf.DirShelf(share.dbpath, 'dirshelf')
+        self.d = dirshelf.DirShelf('/dev/shm/misura_test/ds', 'dirshelf')
 
     def tearDown(self):
         self.d.close()

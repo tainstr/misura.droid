@@ -7,7 +7,7 @@ from time import sleep, time
 from traceback import print_exc, format_exc
 from multiprocessing import Lock
 
-from misura.process_proxy import ProcessProxy, ProcessProxyManager, ProcessProxyInstantiator
+from misura.droid.process_proxy import ProcessProxy, ProcessProxyManager, ProcessProxyInstantiator
 
 
 class DummyCallable(object):

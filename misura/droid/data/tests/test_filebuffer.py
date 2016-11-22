@@ -9,14 +9,14 @@ import fcntl
 from fcntl import flock, LOCK_SH, LOCK_EX, LOCK_NB
 from time import time, sleep
 
-from misura import utils_testing as ut
+#from misura import utils_testing as ut
 
 from misura.droid.data import filebuffer
 
 from misura.droid import utils
 
 
-dr = ut.params.tmpdir + 'testfb/'
+dr = '/dev/shm/misura_test/fb/'
 p = dr + 'test'
 
 

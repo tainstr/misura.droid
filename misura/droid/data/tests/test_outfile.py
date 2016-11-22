@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 import tables
 
-from misura import utils_testing as ut
+#from misura import utils_testing as ut
 
 from misura.droid.data import sign
 from misura.canon import indexer
