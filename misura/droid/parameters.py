@@ -114,8 +114,8 @@ from multiprocessing import Value
 # TODO: alternatively import from config dir
 # openssl genrsa 2048 > privkey.pem
 # openssl req -new -x509 -sha512 -key privkey.pem -out cacert.pem -days 0
-ssl_private_key = False
-ssl_cacert = False
+ssl_private_key = ''
+ssl_cacert = ''
 try:
     ssl_private_key = pkg_resources.resource_filename(
                                                       'misura.server', 'privkey.pem')
@@ -123,8 +123,6 @@ try:
 except:
     pass
 ssl_enabled = ssl_enabled and os.path.exists(ssl_private_key) and os.path.exists(ssl_cacert)
-ssl_private_key = ssl_private_key
-ssl_cacert = ssl_cacert
 
 ERRVAL = 2.**127
 #######
