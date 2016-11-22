@@ -18,7 +18,7 @@ import multiprocessing
 
 from misura.canon import csutil
 
-from misura import utils
+from misura.droid import utils
 
 flk = struct.pack('hhqql', F_WRLCK, 0, 0, 0, 0)
 
