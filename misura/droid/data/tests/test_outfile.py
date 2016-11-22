@@ -19,13 +19,14 @@ def setUpModule():
     print 'Starting ' + __name__
 
 m4file = testdir + 'hsm_test.h5'
+certs = testdir + '../../../tests/data/'
 
 
 class OutputFile(unittest.TestCase):
 
     def test_3_signAndVerify(self):
         f = tables.open_file(m4file, mode='r+')
-        s = sign(f)
+        s = sign(f, cacert=certs + 'cacert.pem', privkey=certs + 'privkey.pem')
         self.assertTrue(s, msg='Signature Failed')
         v = indexer.verify(f)
         self.assertTrue(v, msg='Verification Failed')

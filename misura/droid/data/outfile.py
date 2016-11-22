@@ -8,19 +8,23 @@ import Crypto.Hash.SHA as SHA
 import Crypto.Signature.PKCS1_v1_5 as PKCS1_v1_5
 
 from misura.canon import indexer
-from .. utils import lockme
+from ..utils import lockme
 from .. import parameters as params
 
 from refupdater import ReferenceUpdater
 
 
-def sign(f):
+def sign(f, cacert=False, privkey=False):
     """Digitally sign a file using server's private key."""
     # TODO: use config options?
     # Save public certificate
-    f.root.conf.attrs.cert = open(params.ssl_cacert, 'r').read()
+    if not cacert:
+        cacert = params.ssl_cacert
+    f.root.conf.attrs.cert = open(cacert, 'r').read()
     # Read the certificate
-    private_key = open(params.ssl_private_key, 'r').read()
+    if not privkey:
+        privkey = params.ssl_private_key
+    private_key = open(privkey, 'r').read()
     # Create the key
     key = RSA.importKey(private_key)
     verifier = PKCS1_v1_5.new(key)
@@ -87,5 +91,5 @@ class OutputFile(indexer.SharedFile):
         return indexer.SharedFile.close(self)
 
     @lockme
-    def sign(self):
+    def sign(self, cacert=False, privkey=False):
         return sign(self.test)

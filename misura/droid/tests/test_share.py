@@ -6,11 +6,8 @@ import unittest
 import pickle
 import multiprocessing
 import exceptions
-from misura import utils_testing as ut
 from misura.droid import share
 from misura.droid import data
-from misura.canon import option
-from misura.canon import logger
 from misura.droid import utils
 
 
