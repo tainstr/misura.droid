@@ -112,9 +112,16 @@ from multiprocessing import Value
 
 # Extract certificates from pkg_resources
 # TODO: alternatively import from config dir
-ssl_private_key = pkg_resources.resource_filename(
-    'misura.server', 'privkey.pem')
-ssl_cacert = pkg_resources.resource_filename('misura.server', 'cacert.pem')
+# openssl genrsa 2048 > privkey.pem
+# openssl req -new -x509 -sha512 -key privkey.pem -out cacert.pem -days 0
+ssl_private_key = False
+ssl_cacert = False
+try:
+    ssl_private_key = pkg_resources.resource_filename(
+                                                      'misura.server', 'privkey.pem')
+    ssl_cacert = pkg_resources.resource_filename('misura.server', 'cacert.pem')
+except:
+    pass
 ssl_enabled = ssl_enabled and os.path.exists(ssl_private_key) and os.path.exists(ssl_cacert)
 ssl_private_key = ssl_private_key
 ssl_cacert = ssl_cacert
