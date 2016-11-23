@@ -4,8 +4,6 @@ import unittest
 from misura.canon.option import ao
 from misura.droid import device
 
-from misura.server import BaseServer
-
 print 'Importing', __name__
 
 
@@ -20,7 +18,10 @@ class DummyServedDevice(device.Device):
 class DeviceServer(unittest.TestCase):
 
     def setUp(self):
-        self.root = BaseServer()
+        self.root = device.Device()
+        self.root.deviceservers = []
+        self.root.pause_check = lambda *a: 1
+        self.root.desc.add_option('progress', type='Progress')
         self.ds = device.DeviceServer(self.root, 'srv')
         self.dev1 = device.Device(self.ds, 'dev1')
         self.dev1['dev'] = '/dev/1'
