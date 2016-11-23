@@ -83,7 +83,7 @@ class Node(ConfigurationInterface):
         self.conf_def = deepcopy(self.conf_def)
         self._parent = parent
         # import here so we get fresh database definition
-        from misura import share
+        from misura.droid import share
         if self.root is None:
             manager = share.manager
             self.main_confdir = params.confdir
