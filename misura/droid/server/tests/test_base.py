@@ -3,8 +3,7 @@
 
 import unittest
 
-#FIXME: plugin issue!
-#from misura.droid import server
+from misura.droid import server
 from misura.droid import parameters as params
 from misura.droid import storage, share
 
@@ -15,7 +14,6 @@ params.testing = True
 def setUpModule():
     print 'Starting ' + __name__
 
-@unittest.skip('i')
 class BaseServer(unittest.TestCase):
 
     def setUp(self):

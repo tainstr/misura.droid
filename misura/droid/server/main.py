@@ -5,6 +5,7 @@
 # TODO: implement errors
 import xmlrpclib
 import os
+import importlib
 from traceback import format_exc
 from multiprocessing import Lock, Process, Value
 from multiprocessing.managers import BaseProxy
@@ -24,7 +25,33 @@ from .. import device
 from .base import BaseServer
 import stream
 
-#from .. import plugin
+
+def iterate_plugins(plug):
+    group = []
+    for plug in plug.splitlines():
+        if len(plug) < 2:
+            continue
+        if plug == '#GROUP':
+            ret = group[:]
+            group = []
+            yield ret
+        if plug.startswith('#'):
+            continue
+        func = False
+        if '.' in plug:
+            plug = plug.split('.')
+            func = plug.pop(-1)
+            plug = '.'.join(plug)
+        try:
+            m = importlib.import_module(plug)
+            if func:
+                m = getattr(m, func)
+            group.append(m)
+        except:
+            print format_exc()
+
+    yield group
+
 
 class MainServer(BaseServer):
     """Live MisuraServer object"""
@@ -55,7 +82,7 @@ class MainServer(BaseServer):
                  port=3880,
                  confdir=params.confdir,
                  datadir=params.datadir,
-                 plug=[], manager=False): #plugin.registry
+                 plug=False, manager=False):
         if manager is False:
             manager = share.manager
         print 'MainServer with manager', repr(manager)
@@ -66,8 +93,10 @@ class MainServer(BaseServer):
         # Announce zeroconf service
         msg = 'SERIAL=%s; HSM=%i; ODHT=%i; ODLT=%i; FLEX=%i' % (self['eq_sn'],
                                                                 self['eq_hsm'],
-                                                                self['eq_vertical'],
-                                                                self['eq_horizontal'],
+                                                                self[
+                                                                    'eq_vertical'],
+                                                                self[
+                                                                    'eq_horizontal'],
                                                                 self['eq_flex'])
         if params.announceZeroconf:
             self.zeroconf = utils.ZeroconfService(
@@ -84,11 +113,13 @@ class MainServer(BaseServer):
         params.max_serial_scan = max_serial
         # Load plugins
         initializing = Value('i', 0)
+        if not plug:
+            plug = self['eq_plugin']
 
         def init(func):
             func(self)
             initializing.value -= 1
-        for group in plug:
+        for group in iterate_plugins(plug):
             for func in group:
                 if params.init_threads:
                     initializing.value += 1
@@ -220,7 +251,7 @@ class MainServer(BaseServer):
         self.log(msg, p=p)
         return True
 
-    def set_timeDelta(self,val):
+    def set_timeDelta(self, val):
         self.time_delta = val
         return val
 
@@ -248,7 +279,7 @@ class MainServer(BaseServer):
 
     shutting_down = False
 
-    def shutdown(self, after=1, restart=False, init_instrument = False, writeLevel=5, userName='system'):
+    def shutdown(self, after=1, restart=False, init_instrument=False, writeLevel=5, userName='system'):
         if self.shutting_down:
             return 'Already shutting down.'
         if writeLevel < 5:
@@ -260,7 +291,8 @@ class MainServer(BaseServer):
         self.restart = restart
         if init_instrument:
             self.reinit_instrument = self['lastInstrument']
-            self.log.info('Reinitializing instrument after restart:', self.reinit_instrument)
+            self.log.info(
+                'Reinitializing instrument after restart:', self.reinit_instrument)
         else:
             self.reinit_instrument = False
         self['isRunning'] = False

@@ -1,6 +1,25 @@
 # -*- coding: utf-8 -*-
 """/opt/misura/misura/conf/Server.Device"""
 
+plugins="""
+misura.droid.users.Users
+misura.droid.storage.Storage
+misura.droid.support.Support
+#GROUP
+misura.beholder.Beholder
+misura.morla.Morla
+misura.smaug.Smaug
+misura.hydra.Hydra
+misura.balance.Balance
+#GROUP
+misura.kiln.Kiln
+misura.microscope.Hsm
+misura.dilatometer.VerticalDilatometer
+misura.dilatometer.HorizontalDilatometer
+misura.flex.Flex
+misura.dta.DTA
+"""
+
 conf = [
     # Main (Status)
     {"handle": 'Main', "name": 'Status',
@@ -88,6 +107,9 @@ conf = [
         "current": '12345', "writeLevel": 5, "type": 'String'},
     {"handle": 'eq_mac', "name": 'External MAC address',
         "current": '', "writeLevel": 6, "type": 'String'},
+    # Plugin list
+    {"handle": 'eq_plugin', "name": 'Load Plugins',
+     "current": plugins, "type": 'TextArea'},
     # eq_kiln (Enable KILN)
     {"handle": 'eq_kiln', "name": 'Enable KILN',
         "current": True, "type": 'Hidden',
