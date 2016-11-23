@@ -74,7 +74,7 @@ class Pickling(unittest.TestCase):
         self.mgr.start()
 
     def test_noshare(self):
-        from misura import device
+        from misura.droid import device
         pickle.dumps(data.Conf())
         pickle.dumps(data.CircularBuffer())
         obj = self.mgr.Conf()
@@ -132,7 +132,7 @@ class Parallel(unittest.TestCase):
         pass
 
     def test_onoff(self):
-        from misura.device import Node
+        from misura.droid.device import Node
         n0 = Node()
         self.assertEqual(n0['devpath'], 'node')
 #		raw_input()
@@ -171,7 +171,6 @@ class ProcessCache(unittest.TestCase):
         obj = m.SharedFile()
         self.assertFalse(obj.get_uid())
         p.destroy(m)
-        print 'AAAAAAAAAAAA',obj.get_uid(), obj._get_pid()
         m = p.get()
         obj = m.SharedFile()
         pid = obj._get_pid()

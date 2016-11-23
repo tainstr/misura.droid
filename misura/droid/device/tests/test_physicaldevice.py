@@ -38,7 +38,7 @@ class UDevice(unittest.TestCase):
             dev_pattern = '/dev/tty*'
         v = SubPhysical.list_available_devices()
         self.assertIn('/dev/tty1', v.values())
-        self.assertGreater(len(v), 5)
+        self.assertGreater(len(v), 4)
 
 
 if __name__ == "__main__":

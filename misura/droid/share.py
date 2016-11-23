@@ -6,8 +6,6 @@ import os
 
 from time import sleep
 import multiprocessing
-from multiprocessing.managers import SyncManager
-from multiprocessing import Lock
 
 from misura.canon import indexer, logger
 import data
