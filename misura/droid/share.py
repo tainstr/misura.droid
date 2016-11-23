@@ -11,6 +11,7 @@ from misura.canon import indexer, logger
 import data
 import parameters as params
 import process_proxy
+
 # # Activate multiprocessing logging
 # import logging
 #mplog = multiprocessing.get_logger()
@@ -28,26 +29,6 @@ try:
     size = comm.Get_size()
 except:
     pass
-
-
-class MisuraForkAwareThreadLock(object):
-
-    """"Overrides multiprocessing.util.ForkAwareThreadLock
-    in order to use a multiprocessing.Lock instead of a threading.Lock."""
-    # http://stackoverflow.com/questions/3649458/broken-pipe-when-using-python-multiprocessing-managers-basemanager-syncmanager
-
-    def __init__(self):
-        self._reset()
-        multiprocessing.util.register_after_fork(
-            self, MisuraForkAwareThreadLock._reset)
-
-    def _reset(self):
-        self._lock = multiprocessing.Lock()
-        self.acquire = self._lock.acquire
-        self.release = self._lock.release
-
-# Monkey patch BaseProxy in order to use the correct locking
-multiprocessing.managers.BaseProxy._mutex = MisuraForkAwareThreadLock()
 
 class FileBufferLogger(logger.BaseLogger):
     def __init__(self, log_path = False,  owner = False):
@@ -68,28 +49,6 @@ class FileBufferLogger(logger.BaseLogger):
             self.buffer.write(self.log_path,  [p, msg])
         return p,msg  
 
-
-class SharingServer(multiprocessing.managers.Server):
-    public = multiprocessing.managers.Server.public[:]
-    public += ['get_ids', 'get_pid']
-
-    def get_ids(self, c):
-        self.mutex.acquire()
-        try:
-            r = ''
-            for idref,  nref in self.id_to_refcount.iteritems():
-                r += '{}::{}\n'.format(idref, nref)
-            print 'get_ids: returning  ', r
-            return r
-        finally:
-            self.mutex.release()
-
-    def get_pid(self, c):
-        self.mutex.acquire()
-        try:
-            return os.getpid()
-        finally:
-            self.mutex.release()
 
 
 registered = {'SharedFile': indexer.SharedFile,
