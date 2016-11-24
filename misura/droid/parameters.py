@@ -7,7 +7,7 @@ from commands import getoutput as go
 import pkg_resources
 
 version = 0  # Misura version
-
+ut=False
 # LOGIN
 useAuth = True  # Require auth
 exclusiveLogin = False  # Only 1 username at a time

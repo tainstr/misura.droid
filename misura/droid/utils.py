@@ -2,19 +2,21 @@
 # -*- coding: utf-8 -*-
 """Utilities and constants common to all misura server-side modules."""
 import types
-
+import os
+import functools
+from time import time, sleep
 from glob import glob
 from commands import getstatusoutput
 import multiprocessing
 
 from numpy import array
+import numpy as np
 
 from twisted.web import xmlrpc
 from twisted.internet import defer, threads
 
 from . import parameters as params
 from misura.canon import csutil
-from misura.canon.csutil import *
 
 
 csutil.binfunc = xmlrpc.Binary
@@ -106,13 +108,13 @@ def latestFile(path):
 
 def newestFileModified(lst):
     mod = [os.stat(f).st_mtime for f in lst]
-    i = mod.index(numpy.max(mod))
+    i = mod.index(np.max(mod))
     return lst[i]
 
 
 def oldestFileModified(lst):
     mod = [os.stat(f).st_mtime for f in lst]
-    i = mod.index(numpy.min(mod))
+    i = mod.index(np.min(mod))
     return lst[i]
 
 
@@ -401,12 +403,12 @@ def smooth(x, window_len=5, window='hanning'):
         return x
     if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
         raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
-    s = numpy.r_[2 * x[0] - x[window_len - 1::-1],
+    s = np.r_[2 * x[0] - x[window_len - 1::-1],
                  x, 2 * x[-1] - x[-1:-window_len:-1]]
     # print(len(s))
     if window == 'flat':  # moving average
-        w = numpy.ones(window_len, 'd')
+        w = np.ones(window_len, 'd')
     else:
         w = eval('numpy.' + window + '(window_len)')
-    y = numpy.convolve(w / w.sum(), s, mode='same')
+    y = np.convolve(w / w.sum(), s, mode='same')
     return y[window_len:-window_len + 1]
