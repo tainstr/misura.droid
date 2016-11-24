@@ -118,11 +118,11 @@ ssl_private_key = ''
 ssl_cacert = ''
 try:
     ssl_private_key = pkg_resources.resource_filename(
-                                                      'misura.server', 'privkey.pem')
-    ssl_cacert = pkg_resources.resource_filename('misura.server', 'cacert.pem')
+                                                      'misura.droid.server', 'privkey.pem')
+    ssl_cacert = pkg_resources.resource_filename('misura.droid.server', 'cacert.pem')
 except:
     pass
-ssl_enabled = ssl_enabled and os.path.exists(ssl_private_key) and os.path.exists(ssl_cacert)
+ssl_enabled = True
 
 ERRVAL = 2.**127
 #######

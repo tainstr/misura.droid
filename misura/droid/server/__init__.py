@@ -3,3 +3,5 @@
 from base import BaseServer
 from main import MainServer
 from stream import MisuraDirectory
+from misura.canon import determine_path
+cert_dir = determine_path(__file__)
