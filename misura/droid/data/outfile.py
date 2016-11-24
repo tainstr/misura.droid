@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 """Server-side SharedFile implementation for runtime data collection."""
 from traceback import print_exc
-import hashlib
 
 from Crypto.PublicKey import RSA
 import Crypto.Hash.SHA as SHA
 import Crypto.Signature.PKCS1_v1_5 as PKCS1_v1_5
 
 from misura.canon import indexer
-from ..utils import lockme
+from misura.canon.csutil import lockme
 from .. import parameters as params
 
 from refupdater import ReferenceUpdater

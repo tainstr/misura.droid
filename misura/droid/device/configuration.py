@@ -9,7 +9,8 @@ from twisted.web import xmlrpc
 
 from misura.canon import logger
 from misura.canon import csutil
-from ..utils import sanitize,  xmlrpcSanitize, func_args, listDirExt
+from misura.canon.csutil import sanitize,  xmlrpcSanitize, func_args
+from ..utils import listDirExt
 from .. import parameters as params
 
 ####
