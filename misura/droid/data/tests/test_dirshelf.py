@@ -2,15 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import shutil
-import os
-import exceptions
-from time import time, sleep
+from time import time
 
-#from misura import utils_testing as ut
-#from misura import share
 from misura.droid.data import dirshelf
-from misura.droid import utils
 
 props = {'a': {'handle': 'a', 'type': 'Object', 'current': [1, 2]}}
 
