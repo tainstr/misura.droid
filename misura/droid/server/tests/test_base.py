@@ -6,12 +6,13 @@ import unittest
 from misura.droid import server
 from misura.droid import parameters as params
 from misura.droid import storage, share
-
+from misura.canon.csutil import time_scaled
 print 'Importing ' + __name__
 params.testing = True
 
 
 def setUpModule():
+    time_scaled.value = 0
     print 'Starting ' + __name__
 
 class BaseServer(unittest.TestCase):
@@ -26,6 +27,8 @@ class BaseServer(unittest.TestCase):
         self.assertIsInstance(self.srv.storage, storage.Storage)
 
     def test_mapdate(self):
+        fp = self.srv.fp('name')
+        print 'AAAAAAAAAA',open(fp, 'r').read(50), self.srv.h_time_at('name')
         v0 = self.srv['name']
         idx, rep = self.srv.mapdate([('name', 0)])
         self.assertEqual(idx[0], 0)
@@ -34,13 +37,17 @@ class BaseServer(unittest.TestCase):
         idx, rep = self.srv.mapdate([('name', t0)])
         self.assertEqual(len(idx), 0)
         self.assertEqual(len(rep), 0)
+        
+        # Assign new name
         self.srv['name'] = 'newname'
+        print 'BBBBBBBBBBBBB',open(fp, 'r').read(50), self.srv.h_time_at('name')
         idx, rep = self.srv.mapdate([('name', t0)])
         self.assertEqual(idx[0], 0)
         t1 = self.srv.time()
         v1 = rep[0]
         self.assertGreater(t1, t0)
         self.assertEqual(v1, 'newname')
+        
         # Change readLevel so it cannot be accessed
         self.srv.setattr('name', 'readLevel', 5)
         # Default level is 0, so I should not access
