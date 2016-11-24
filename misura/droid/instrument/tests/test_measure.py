@@ -3,8 +3,7 @@
 """Test per Misura Language."""
 import unittest
 from misura.canon import csutil as utils
-from misura import utils_testing as ut
-from misura.canon.tests import FakeStorageFile, DummyInstrument
+from misura.canon.tests import FakeStorageFile, DummyInstrument, checkCompile
 from misura.droid import instrument
 
 
@@ -47,7 +46,7 @@ class Measure(unittest.TestCase):
         for ins, itrm in self.instruments.iteritems():
             itrm.env.tab = FakeStorageFile()
             itrm.compile_scripts(self.stor)
-            ut.checkCompile(self, itrm, itrm)
+            checkCompile(self, itrm, itrm)
 
     def test_cooling(self):
         self.test_compiling()
