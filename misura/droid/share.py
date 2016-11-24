@@ -205,7 +205,7 @@ def init(connect=False, authkey='misura', port=0, log_filename=params.log_filena
         shutil.rmtree(dbpath)
     # Clear the device registry
     try:
-        from misura.device import delete_registry
+        from misura.droid.device import delete_registry
         delete_registry()
     except:
         pass
