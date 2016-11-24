@@ -12,16 +12,15 @@ import multiprocessing
 from numpy import array
 import numpy as np
 
+from twisted.web import xmlrpc
+from twisted.internet import threads
+
 from . import parameters as params
 from misura.canon import csutil
 from misura.canon.csutil import *
 
-try:
-    from twisted.web import xmlrpc
-    from twisted.internet import threads
-    csutil.binfunc = xmlrpc.Binary
-except:
-    print('Twisted package is missing')
+csutil.binfunc = xmlrpc.Binary
+
 
 def defer(func):
     """deferToThread decorator"""
