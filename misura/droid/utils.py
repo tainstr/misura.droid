@@ -17,7 +17,7 @@ from twisted.internet import defer, threads
 
 from . import parameters as params
 from misura.canon import csutil
-
+from misura.canon.csutil import *
 
 csutil.binfunc = xmlrpc.Binary
 
