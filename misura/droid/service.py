@@ -22,7 +22,6 @@ from misura.droid import parameters as params
 from misura.droid import share
 from misura.droid import utils
 from misura.droid.server import MainServer, MisuraDirectory, cert_dir
-from keepnote.gui import basetreeview
 
 # Extract certificates from pkg_resources
 # TODO: alternatively import from config dir
