@@ -612,19 +612,21 @@ class Instrument(device.Measurer, device.Device):
             'Initializing instrument', self.name, 'with preset', preset)
         self.root.set('lastInstrument', self.name)
         # Prepare number of steps
+        self.log.info('Checking preset')
+	nSamples = self['nSamples']
+        if not (preset and self.set_preset(preset)):
+            self.set_default_preset()
+	self.log.info('Assigning samples')
         self.setattr('initInstrument', 'max', len(self.root.deviceservers) + 3)
         self['initInstrument'] = 1
-        self.log.info('Assigning samples')
-        self['nSamples'] = self['nSamples']
+	self['zerotime'] = 0
+	self['nSamples'] = nSamples
+
         # Tell the main server which operation is in progress
         self.root.set('progress', self['fullpath'] + 'initInstrument')
         self.mapRoleDev()
         self['initInstrument'] = 2
         ret = True
-
-        if not (preset and self.set_preset(preset)):
-            self.set_default_preset()
-
         # Init instrument on *all* physical devices
         for ds in self.root.deviceservers:
             dsname = ds['name']
