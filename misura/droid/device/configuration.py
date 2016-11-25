@@ -310,14 +310,14 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
     @classmethod
     def _pget(cls, key, self):
         """Helper function for getting a class-defined property"""
-        print 'PGET', type(self), key # this works!
+        #print 'PGET', type(self), key # this works!
         return self.get(key)
 
     @classmethod
     def _pset(cls, key, self, val):
         """Helper function for setting a class-defined property"""
         # FIXME: pset does not work!
-        print 'PSET', type(self), key, val
+        #print 'PSET', type(self), key, val
         return self.set(key, val)
 
     @classmethod
