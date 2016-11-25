@@ -28,7 +28,6 @@ class BaseServer(unittest.TestCase):
 
     def test_mapdate(self):
         fp = self.srv.fp('name')
-        print 'AAAAAAAAAA',open(fp, 'r').read(50), self.srv.h_time_at('name')
         v0 = self.srv['name']
         idx, rep = self.srv.mapdate([('name', 0)])
         self.assertEqual(idx[0], 0)

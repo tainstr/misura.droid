@@ -66,7 +66,9 @@ class Instrument(device.Measurer, device.Device):
                      "type": 'Integer', "attr": ['ReadOnly', 'History']},
                  ]
 
-    def __init__(self, parent=None, node='instrument'):
+    def __init__(self, parent=None, node=False):
+        if not node:
+            node=self.__class__.__name__
         if parent:
             opt = 'eq_' + node
             if parent.has_key(opt):
@@ -74,6 +76,7 @@ class Instrument(device.Measurer, device.Device):
                     self.enabled = False
                     print 'Instrument is disabled:', node
                     return
+
         self.name = node
         device.Device.__init__(self, parent=parent, node=node)
         self['initializing'] = True

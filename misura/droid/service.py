@@ -22,11 +22,14 @@ from misura.droid import parameters as params
 from misura.droid import share
 from misura.droid import utils
 from misura.droid.server import MainServer, MisuraDirectory, cert_dir
+from keepnote.gui import basetreeview
 
 # Extract certificates from pkg_resources
 # TODO: alternatively import from config dir
-ssl_private_key = pkg_resources.resource_filename('misura.droid.server', 'privkey.pem')
-ssl_cacert = pkg_resources.resource_filename('misura.droid.server', 'cacert.pem')
+ssl_private_key = pkg_resources.resource_filename(
+    'misura.droid.server', 'privkey.pem')
+ssl_cacert = pkg_resources.resource_filename(
+    'misura.droid.server', 'cacert.pem')
 params.ssl_enabled = params.ssl_enabled and os.path.exists(
     ssl_private_key) and os.path.exists(ssl_cacert)
 params.ssl_private_key = ssl_private_key
@@ -89,9 +92,10 @@ def setMain(opt):
                       port=opt['-p'],
                       confdir=opt['-c'],
                       datadir=opt['-d'],
+                      plug=opt['-e'],
                       manager=share.manager)
     xmlrpc.addIntrospection(main)
-    mimetypes = {'.h5':'application/x-hdf;subtype=bag'}
+    mimetypes = {'.h5': 'application/x-hdf;subtype=bag'}
     static.File.contentTypes.update(mimetypes)
     web = static.File(params.webdir)
     web.putChild('RPC', main)
@@ -155,6 +159,11 @@ def startInstance(instanceName='', port=params.main_port):
     p.start()
     return p
 
+base_plugins="""misura.droid.users.Users
+misura.droid.storage.Storage
+misura.droid.support.Support
+#GROUP
+"""
 
 def getOpts():
     """-n Instance Name
@@ -163,16 +172,16 @@ def getOpts():
     -d Data directory
     -m Memory directory
     -r Reinit instrument name
+    -e Plugins
     Returns a dictionary with defaults or expressed variables.
     """
     import getopt
-    opts, args = getopt.getopt(sys.argv[1:], 'n:p:c:d:m:r:')
+    opts, args = getopt.getopt(sys.argv[1:], 'n:p:c:d:m:r:e:')
     print opts, args
-    n = ''
-    p = params.main_port
-    c, d = (0, 0)
     r = {'-n': False, '-p': params.main_port,
-         '-c': False, '-d': False, '-m': False, '-r': '', 'args': args}
+         '-c': False, '-d': False, '-m': False, '-r': '',
+         '-e': False,
+         'args': args}
     for opt, val in opts:
         if opt == '-p':
             val = int(val)
@@ -183,17 +192,23 @@ def getOpts():
             if not os.path.exists(val):
                 print "Non-existent path configured for %s: %s" % (opt, val)
 #               val=False
+        if opt in ['-e'] and val is not False:
+            val=val.strip('"').replace(';','\n')
+            val=base_plugins+val
         r[opt] = val
     for opt, val in r.iteritems():
         if opt == '-c' and val is False:
             print 'Setting default confdir', params.datadir
             val = params.confdir
-        if opt == '-d' and val is False:
+        elif opt == '-d' and val is False:
             print 'Setting default datadir', params.datadir
             val = params.datadir
-        if opt == '-m' and val is False:
+        elif opt == '-m' and val is False:
             print 'Setting default rundir', params.rundir
             val = params.rundir
+        elif opt == '-e' and val is False:
+            print 'Setting default extensions'
+            r[opt] = False
         r[opt] = val
     return r
 
@@ -215,8 +230,6 @@ def stop():
     print 'Stopping tests:', go('pkill -9 -f test_')
 
 
-
-
 def run(noname=False):
     global main, web, site
     # command-line start
@@ -228,8 +241,8 @@ def run(noname=False):
     if 'restart' in r['args']:
         print 'Restarting...'
         stop()
-    print 'Instance Name: %s; Port: %i\nConf: %s; Data: %s Mem: %s' % (r['-n'],
-                                                                       r['-p'], r['-c'], r['-d'], r['-m'])
+    print 'Instance Name: %s; Port: %i\nConf: %s; Data: %s Mem: %s Ext: %s' % (r['-n'],
+                                                                               r['-p'], r['-c'], r['-d'], r['-m'], r['-e'])
     params.set_confdir(r['-c'])
     params.set_datadir(r['-d'])
     params.set_rundir(r['-m'])
@@ -240,11 +253,12 @@ def run(noname=False):
     share.set_dbpath()
     main, web, site = setMain(r)
     # Re-initialize last instrument
-    init_instrument =r['-r'] 
+    init_instrument = r['-r']
     if init_instrument:
         instrument = getattr(main, init_instrument, False)
         if not instrument:
-            raise BaseException('Asked to reinit an unexisting instrumnet! '+init_instrument)
+            raise BaseException(
+                'Asked to reinit an unexisting instrumnet! ' + init_instrument)
         instrument.init_instrument()
     from twisted.internet import reactor
     addListeners(
@@ -253,7 +267,7 @@ def run(noname=False):
     # Stop remaining spares processes
     stop()
     utils.apply_time_delta(main.time_delta)
-        #TODO: shell command to apply a time delta!
+    # TODO: shell command to apply a time delta!
     if main.restart:
         args = sys.argv[1:]
         if main.reinit_instrument:
