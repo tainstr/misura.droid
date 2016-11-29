@@ -9,8 +9,6 @@ misura.droid.support.Support
 misura.beholder.Beholder
 misura.morla.Morla
 misura.smaug.Smaug
-misura.hydra.Hydra
-misura.balance.Balance
 #GROUP
 misura.kiln.Kiln
 misura.microscope.Hsm
