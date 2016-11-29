@@ -185,6 +185,9 @@ class Support(device.Device):
         # Then do a configuration backup:
         self.get_doBackup()
         self['upgradeProgress'] = 3
+        # Clean the project root
+        r = go('rm -rfv "{0}"; mkdir -pv {0}'.format(self.project_root()))
+        self.log.debug('Cleaned current version', r[1])
         # Lastly, restore to the selected exe version
         r = self.do_restore(source, self.project_root())
         self['upgradeProgress'] = 0
@@ -221,4 +224,4 @@ class Support(device.Device):
         return r
 
     def project_root(self):
-        return "/".join(params.mdir.split("/")[:-3])
+        return "/".join(params.mdir.split("/")[:-4])
