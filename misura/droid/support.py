@@ -186,7 +186,7 @@ class Support(device.Device):
         self.get_doBackup()
         self['upgradeProgress'] = 3
         # Clean the project root
-        r = go('rm -rfv "{0}"; mkdir -pv {0}'.format(self.project_root()))
+        r = go('find "{0}" -name "*.pyc" -delete ; mkdir -pv {0}'.format(self.project_root()))
         self.log.debug('Cleaned current version', r[1])
         # Lastly, restore to the selected exe version
         r = self.do_restore(source, self.project_root())
