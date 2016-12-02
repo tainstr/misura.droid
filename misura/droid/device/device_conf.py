@@ -38,17 +38,17 @@ conf = [
 
     # anerr(Consecutive Analysis Errors)
     {"handle": 'anerr', "name": 'Consecutive Errors',
-        "current": 0, "min": 0, "type": 'Integer', "attr": ['History', 'ReadOnly', 'Runtime'], "readLevel":1, "priority": 0},
+        "current": 0, "min": 0, "type": 'Integer', "attr": ['History', 'ReadOnly', 'Runtime'], "readLevel":3, "priority": 0},
     {"handle": 'maxErr',
         "name": 'Maximum number of errors before aborting acquisition.',
-        "current": 50,
+        "current": 50, "readLevel": 3,
         "type": 'Integer', "readLevel": 4, "writeLevel": 4, "priority": 0},
     #------
 
     # err (Measurement Error index)
     #
     {"handle": 'err', "name": 'Measurement error', "min": 0,
-        "type": 'Float', "attr": ['ReadOnly', 'History', 'Runtime'], "readLevel": 2},
+        "type": 'Float', "attr": ['ReadOnly', 'History', 'Runtime'], "readLevel": 3},
 
     # status
     {"handle": 'status', "name": 'Status', "current": True,
