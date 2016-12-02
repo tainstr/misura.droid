@@ -229,7 +229,7 @@ def stop():
     print 'Stopping tests:', go('pkill -9 -f test_')
 
 
-def run(noname=False):
+def run(noname=False, misuraServerExe=params.misuraServerExe):
     global main, web, site
     # command-line start
     r = getOpts()
@@ -271,10 +271,10 @@ def run(noname=False):
         args = sys.argv[1:]
         if main.reinit_instrument:
             args += ['-r', main.reinit_instrument]
-        print 'RESTARTING', params.misuraServerExe, args
+        print 'RESTARTING', misuraServerExe, args
         # Make executable again, if upgraded in the meantime
-        go('chmod ugo+x "{}"'.format(params.misuraServerExe))
-        pid = Popen(["python", params.misuraServerExe] + args).pid
+        go('chmod ugo+x "{}"'.format(misuraServerExe))
+        pid = Popen(["python", misuraServerExe] + args).pid
         print 'RESTARTED WITH PID', pid
 
 
