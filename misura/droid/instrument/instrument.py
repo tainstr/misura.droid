@@ -265,16 +265,12 @@ class Instrument(device.Measurer, device.Device):
             if not r:
                 continue
             obj, preset, io = r
-            if not io:
-                fp = prop['current'][0]
-            else:
-                fp = prop['options'][0]
-
-            if fp.startswith('/beholder/'):
+            mro = obj['mro']
+            if 'Camera' in mro:
                 self.acquisition_devices.append(obj)
                 self.camera_roles.append(handle)
 
-            elif fp.startswith('/balance/'):
+            elif 'Balance' in mro:
                 self.acquisition_devices.append(obj)
 
             # Publish the simple IO object (retrievable with get() call)
@@ -613,14 +609,14 @@ class Instrument(device.Measurer, device.Device):
         self.root.set('lastInstrument', self.name)
         # Prepare number of steps
         self.log.info('Checking preset')
-	nSamples = self['nSamples']
+        nSamples = self['nSamples']
         if not (preset and self.set_preset(preset)):
             self.set_default_preset()
-	self.log.info('Assigning samples')
+        self.log.info('Assigning samples')
         self.setattr('initInstrument', 'max', len(self.root.deviceservers) + 3)
         self['initInstrument'] = 1
-	self['zerotime'] = 0
-	self['nSamples'] = nSamples
+        self['zerotime'] = 0
+        self['nSamples'] = nSamples
 
         # Tell the main server which operation is in progress
         self.root.set('progress', self['fullpath'] + 'initInstrument')
