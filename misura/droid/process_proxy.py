@@ -270,7 +270,8 @@ class ProcessProxy(object):
             if self._max_restarts>=0 and self._restarts.value >= self._max_restarts:
                 self._log.critical('ProcessProxy died too many times. Giving up', self._max_restarts, self._pid_path)
                 raise RuntimeError('ProcessProxy died too many times. Giving up.', self._max_restarts)
-            self._log.debug('_procedure_call restarting underlying process', self._restarts.value)
+            if method!='put_log':
+                self._log.debug('_procedure_call restarting underlying process', self._restarts.value)
             self._start(*self._args, **self._kwargs)
             self._restarts.value+=1
         # Combine PID and thread ID
