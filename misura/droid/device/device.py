@@ -6,7 +6,7 @@ from traceback import format_exc
 import multiprocessing
 from collections import defaultdict
 
-from misura.canon import milang
+from misura.canon import milang, option
 from misura.canon.csutil import unlockme
 
 from .. import utils
@@ -25,7 +25,7 @@ class AlreadyLocked(BaseException):
     pass
 
 
-class Device(milang.Scriptable, Node):
+class Device(option.Aggregative, milang.Scriptable, Node):
 
     """General interface for devices. Role-aware and Multiprocessing-aware"""
     allow_none = True
@@ -88,6 +88,12 @@ class Device(milang.Scriptable, Node):
 
     def xmlrpc___nonzero__(self):
         return True
+    
+    def xmlrpc_collect_aggregate(self, *a, **k):
+        return self.collect_aggregate(*a, **k)
+    
+    def xmlrpc_update_aggregates(self, *a, **k):
+        return self.update_aggregates(*a, **k)
 
     @classmethod
     def list_available_devices(cls):
