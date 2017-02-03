@@ -354,6 +354,17 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
     def setAttributes(self, name, attrlist, writeLevel=5):
         return self.desc.setAttributes(name, attrlist)
     xmlrpc_setAttributes = setAttributes
+    
+    def add_attr(self, opt, attr_name, writeLevel=5):
+        return self.desc.add_attr(opt, attr_name)
+    xmlrpc_add_attr = add_attr
+    
+    def del_attr(self, opt, attr_name, writeLevel=5):
+        return self.desc.del_attr(opt, attr_name)
+    xmplrpc_del_attr = del_attr
+    
+    
+    
 
     def getFlags(self, opt):
         """Returns option flags for `opt`"""

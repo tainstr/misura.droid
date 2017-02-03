@@ -39,7 +39,6 @@ class BaseServer(unittest.TestCase):
         
         # Assign new name
         self.srv['name'] = 'newname'
-        print 'BBBBBBBBBBBBB',open(fp, 'r').read(50), self.srv.h_time_at('name')
         idx, rep = self.srv.mapdate([('name', t0)])
         self.assertEqual(idx[0], 0)
         t1 = self.srv.time()
