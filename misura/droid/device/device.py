@@ -588,7 +588,6 @@ class Device(option.Aggregative, milang.Scriptable, Node):
                 'Cannot start parallel acquisition while still initializing')
             nval = 0
         nval = int(nval)
-
         current = self.desc.get('running')
         if current == nval:
             self.log.debug('Running state already set:', current)
@@ -606,15 +605,16 @@ class Device(option.Aggregative, milang.Scriptable, Node):
             if self.process_alive():
                 # Called while closing...
                 if self['initializing']:
-                    return 0
+                    self.log.debug('Trying to stop process while initializing')
+                    #return 0
                 pid = self['pid']
                 self.log.debug('A parallel process was defined.', pid)
                 self.desc.set('running', 0)
                 r = utils.join_pid(pid, 12, self['fullpath'])
                 self.desc.set('running', 0)
                 if not r:
-                    print 'Running: ', self.desc.get('running'), self['running']
-                    self.log.critical('Terminating acquisition process!', pid)
+                    self.log.critical('Terminating acquisition process!', pid, 
+                                      self.desc.get('running'), self['running'])
                     utils.kill_pid(pid)
                 self.unlock()
                 self.process = False
