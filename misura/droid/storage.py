@@ -37,7 +37,6 @@ class FileServer(xmlrpc.XMLRPC, indexer.FileManager):
     xmlrpc_searchPath = lambda *foo: False
     timeout = 600
 
-
     @property
     def live(self):
         """Client UT compatibility"""
@@ -60,21 +59,22 @@ class FileServer(xmlrpc.XMLRPC, indexer.FileManager):
         indexer.FileManager.__init__(self, store=store)
         self.xmlrpc_open_uid = self.open_uid
         self.reserved = set()  # reserved uid registry
-        
+
     def check(self):
         """Closes timed-out files to save RAM"""
         t = time()
         for uid, test in self.tests.items():
             ts = test._get_timestamp()
             if t - ts > self.timeout:
-                self.log.debug('SharedFile timeout:', t-ts, self.uids[uid], uid)
+                self.log.debug(
+                    'SharedFile timeout:', t - ts, self.uids[uid], uid)
                 self.close_uid(uid)
         return True
 
     def close_uid(self, uid):
         """Override FileManager.close_uid to shutdown the ProcessProxy also"""
         f = self.uid(uid)
-        r = indexer.FileManager.close_uid(self,uid)
+        r = indexer.FileManager.close_uid(self, uid)
         if f is not False:
             f._stop()
         return r
@@ -173,6 +173,7 @@ class FileServer(xmlrpc.XMLRPC, indexer.FileManager):
         # Return the function
         return cb
 
+
 class Storage(device.Device, indexer.Indexer):
 
     """Serving test files from on-board disk storage"""
@@ -243,12 +244,12 @@ class Storage(device.Device, indexer.Indexer):
         self.log.info('DISKUSAGE', self.path, free, total, used)
         return int(used)
 
-
-    def check(self):
-        """Deletes old files when disk space is running out"""
+    def _remove_oldest_names(self):
+        """Warning: chmod can change ctime and so lead to wrong deletions"""
         free_space_in_MB = utils.disk_free(self.path, unit=2.**20)[0]
         space_to_keep_in_MB = self['keepDisk']
-        files_sorted_by_oldest_first = map(lambda elem: elem[0], utils.iter_cron_sort(self.path))
+        files_sorted_by_oldest_first = map(
+            lambda elem: elem[0], utils.iter_cron_sort(self.path))
         files_sorted_by_oldest_first = utils.only_hdf_files(
             utils.filter_calibration_filenames(files_sorted_by_oldest_first))
 
@@ -256,10 +257,37 @@ class Storage(device.Device, indexer.Indexer):
             file_to_delete = files_sorted_by_oldest_first.pop(0)
             os.remove(file_to_delete)
             free_space_in_MB = utils.disk_free(self.path, unit=2.**20)[0]
-            self.log.info('Auto cleanup: removed ', file_to_delete, '. Free space: ', free_space_in_MB)
-        
+            self.log.info(
+                'Auto cleanup: removed ', file_to_delete, '. Free space: ', free_space_in_MB)
+            
         if free_space_in_MB < space_to_keep_in_MB:
-            self.log.critical('Failed to increase tests storage. Please contact support. \nFree storage: {:.2f}MB'.format(free_space_in_MB))
+            self.log.critical(
+                'Failed to increase tests storage. Please contact support. \nFree storage: {:.2f}MB'.format(free_space_in_MB))
+            return False
+        return True
+
+    def check(self):
+        """Deletes old files when disk space is running out"""
+        free_space_in_MB = utils.disk_free(self.path, unit=2.**20)[0]
+        space_to_keep_in_MB = self['keepDisk']
+        if free_space_in_MB > space_to_keep_in_MB:
+            self.test.check()
+            return True
+
+        entries = self.query({}, 1, 'zerotime', 'ASC', 50, 0)
+
+        while (free_space_in_MB < space_to_keep_in_MB and len(entries) > 0):
+            entry = entries.pop(0)
+            r = self.remove_uid(entry[2])
+            if not r:
+                os.remove(entry[0])
+            free_space_in_MB = utils.disk_free(self.path, unit=2.**20)[0]
+            self.log.info(
+                'Auto cleanup: removed ', entry[0], '. Free space: ', free_space_in_MB)
+
+        if free_space_in_MB < space_to_keep_in_MB:
+            self.log.critical('Removing files by name...')
+            self._remove_oldest_names()
         self.test.check()
         return True
 

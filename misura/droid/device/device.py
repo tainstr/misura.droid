@@ -606,7 +606,7 @@ class Device(option.Aggregative, milang.Scriptable, Node):
                 # Called while closing...
                 if self['initializing']:
                     self.log.debug('Trying to stop process while initializing')
-                    #return 0
+                    return 0
                 pid = self['pid']
                 self.log.debug('A parallel process was defined.', pid)
                 self.desc.set('running', 0)
