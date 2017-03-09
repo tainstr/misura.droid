@@ -433,8 +433,12 @@ class Device(option.Aggregative, milang.Scriptable, Node):
             desc = self.desc.describe([])
         # Trigger get/set function for options involving Hardware
         kn = self.desc.getKeep_names()
+        # Sort by priority
+        items = desc.values()
+        items.sort(option.prop_sorter)
         if self['isConnected']:
-            for key, ent in desc.iteritems():
+            for ent in items:
+                key = ent['handle']
                 if key in kn:
                     continue
                 if ent['type'] in ['ReadOnly', 'Button', 'Hidden', 'Progress']:
