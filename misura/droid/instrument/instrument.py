@@ -10,7 +10,7 @@ from datetime import datetime
 from traceback import format_exc
 import functools
 
-from misura.canon.csutil import utime
+from misura.canon.csutil import utime, initializeme
 from misura.droid import parameters as params
 from .. version import __version__
 from misura.droid import share
@@ -135,6 +135,7 @@ class Instrument(device.Measurer, device.Device):
         smp.env.hdf = self.outFile
         return smp
 
+    @initializeme(repeatable=True)
     def set_nSamples(self, n):
         """Define Sample objects which will contain informations about each sample during analysis"""
         # Create Role options
@@ -143,9 +144,8 @@ class Instrument(device.Measurer, device.Device):
         if n > 16:
             n = 16
         n = device.Measurer.set_nSamples(self, n)
-        self['initializing'] = True
         # Creates all required samples
-        print 'Instrument.set_nSamples', n
+        self.log.debug('Instrument.set_nSamples', n)
         self.samples = []  # Clear samples list
 
         for i in range(n):
@@ -173,8 +173,7 @@ class Instrument(device.Measurer, device.Device):
         self._rmodel = False
         self.log.info('Compiling scripts')
         self.distribute_scripts()
-        print 'Instrument.set_nSamples done', n
-        self['initializing'] = False
+        self.log.debug('Instrument.set_nSamples done', n)
         return n
 
     def delete_samples_from(self, start_sample):
@@ -310,9 +309,10 @@ class Instrument(device.Measurer, device.Device):
             self.acquisition_devices.append(self.kiln)
 
         self.manage_thermal_cycle_motor_options()
-
-        self['initializing'] = False
-        print 'DONE MAPROLEDEV', self.acquisition_devices, repr(self.kiln), self['name']
+        # Reset initializing flag only if not during a larger instrument initialization
+        if not self['initInstrument']:
+            self['initializing'] = False
+        self.log.debug('DONE MAPROLEDEV', self.acquisition_devices, repr(self.kiln), self['name'])
         return True
 
     def manage_thermal_cycle_motor_options(self):

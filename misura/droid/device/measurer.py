@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """A device hosting one or more samples and operating on them (typically, for measurement)."""
-
+from misura.canon.csutil import initializeme
 
 class Measurer(object):
 
@@ -13,6 +13,7 @@ class Measurer(object):
                     "type": 'Role', 'parent': 'nSamples', "writeLevel": 3},
                 ]
 
+    @initializeme(repeatable=True)
     def set_nSamples(self, n):
         """Set the number of samples to search in the image. Creates a Role option for each sample."""
         if self.root is not None and self.root['isRunning']:
@@ -21,7 +22,6 @@ class Measurer(object):
             return None
         if n > 16:
             n = 16
-        self['initializing'] = 1
         self['running'] = 0
         for i in range(n):
             h = 'smp%i' % i
@@ -47,7 +47,6 @@ class Measurer(object):
 #       # Re-init all samples
         self.desc.set('nSamples', n)  # n will be used in init_sample!
         self.init_samples()
-        self['initializing'] = 0
         return n
 
     def iter_samples(self, dsample=False):

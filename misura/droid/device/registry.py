@@ -62,7 +62,7 @@ class DevicePathRegistry(object):
         r = r and self._unreg(*a, key='tmp')
         return r
 
-    @lockme
+    @lockme()
     def free(self, *a):
         """Locked version of _free()."""
         return self._free(*a)
@@ -79,14 +79,14 @@ class DevicePathRegistry(object):
         self[key] = r
         return n0 - len(r)
 
-    @lockme
+    @lockme()
     def free_all(self, *a):
         """Locked version of _free_all(), from all registries."""
         r = self._free_all(*a, key='reg')
         r += self._free_all(*a, key='tmp')
         return r
 
-    @lockme
+    @lockme()
     def purge(self, path):
         """Remove device `path` from all registries. Called on Device.close()."""
         path, s = _cvt(path, '')
@@ -99,7 +99,7 @@ class DevicePathRegistry(object):
             del t[path]
             self['tmp'] = t
 
-    @lockme
+    @lockme()
     def assign(self, path, devsrv, key='reg'):
         """Assign device `path` to `devsrv` path on registry `key`.
         Returns true on success, False if already assigned to another DeviceServer"""
@@ -117,7 +117,7 @@ class DevicePathRegistry(object):
         """Assign `path` and ` devsrv` to temporary registry 'tmp'."""
         return self.assign(path, devsrv, key='tmp')
 
-    @lockme
+    @lockme()
     def check_available(self, lst=set()):
         """Return unassigned paths in `lst`, removing `failed` paths"""
         assigned = set(self['reg'].keys())

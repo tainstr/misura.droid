@@ -89,6 +89,6 @@ class OutputFile(indexer.SharedFile):
         self.stop()
         return indexer.SharedFile.close(self)
 
-    @lockme
+    @lockme()
     def sign(self, cacert=False, privkey=False):
         return sign(self.test)

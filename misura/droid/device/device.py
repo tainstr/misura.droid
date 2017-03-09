@@ -7,7 +7,7 @@ import multiprocessing
 from collections import defaultdict
 
 from misura.canon import milang, option
-from misura.canon.csutil import unlockme
+from misura.canon.csutil import unlockme, initializeme
 
 from .. import utils
 from .. import data, share  # needed for share loading in partial imports
@@ -424,9 +424,9 @@ class Device(option.Aggregative, milang.Scriptable, Node):
             pass
         return True
     
+    @initializeme(repeatable=True)
     def applyDesc(self, desc=False):
         """Apply current settings"""
-        self['initializing'] = True
         if desc is not False:
             self.desc.update(desc)
         else:
@@ -452,7 +452,6 @@ class Device(option.Aggregative, milang.Scriptable, Node):
                 elif ent['type'].startswith('Role'):
                     self.log.info('Loading role', key, ent['current'])
                     self.map_role_dev(key)
-        self['initializing'] = False
         return desc
 
     def io(self, handle):

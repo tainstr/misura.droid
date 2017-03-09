@@ -44,7 +44,7 @@ class ReferenceUpdater(object):
     def __del__(self):
         self.close()
 
-    @lockme
+    @lockme()
     def reset(self, outfile, zerotime=0):
         """Prepare for a new acquisition"""
         self.zerotime = zerotime
@@ -134,7 +134,7 @@ class ReferenceUpdater(object):
         # Monitor the path
         self.paths[path] = opt['kid']
 
-    @lockme
+    @lockme()
     def sync(self, zerotime=-1, only_logs=False):
         """Sync all entries.
         Returns number of monitored paths and updated ones."""
@@ -229,15 +229,15 @@ class ReferenceUpdater(object):
             raise
         return N
 
-    @lockme
+    @lockme()
     def from_cache(self, key):
         return self.cache.get(key, False)
 
-    @lockme
+    @lockme()
     def set_cache(self, key, val):
         self.cache[key] = val
 
-    @lockme
+    @lockme()
     def append_callback(self, elems):
         self.callback_result += elems
 

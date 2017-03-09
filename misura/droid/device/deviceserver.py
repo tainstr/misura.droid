@@ -8,7 +8,7 @@ from copy import deepcopy
 
 from device import Device,  get_registry
 
-from misura.canon.csutil import unlockme
+from misura.canon.csutil import unlockme, initializeme
 
 conf = [
     {"handle": 'waiting', "name": 'Waiting sub devices',
@@ -137,18 +137,17 @@ class DeviceServer(Device):
         self.log.info('Dropped device:', name, fp)
         return True
 
+    @initializeme()
     def get_rescan(self):
         p = self.parent()
         if p:
             p.pause_check()
         self.unlock()
-        self['initializing'] = True
         registry = get_registry()
         # Trigger simulators reset
         if self.desc.has_key('simulators'):
             self['simulators'] = self['simulators']
         if not self.ServedClasses:
-            self['initializing'] = False
             if p:
                 p.resume_check()
             return False
@@ -157,7 +156,7 @@ class DeviceServer(Device):
         registry.free_all(dspath)
         # Call pre-scan hook on each served object
         for d in self.devices[:]:
-            print 'Checking device', d
+            self.log.debug('Checking device', d)
             ok = d.__class__ in self.ServedClasses
             ok *= d.check()
             if not ok:
@@ -165,13 +164,13 @@ class DeviceServer(Device):
                     'Device self-check failed! Removing', d['fullpath'])
                 d.close()
                 continue
-            print 'keeping', d.__class__, self.ServedClasses
+            self.log.debug('keeping', d.__class__, self.ServedClasses)
             # Reassign active devices
             registry.assign(d, dspath)
             d.pre_scan()
         new = []
         for cls in self.ServedClasses:
-            print 'rescan class',cls
+            self.log.debug('rescan class',cls)
             # Intercept Enumerated devices and refresh their value
             eo = getattr(cls, 'enumerated_option', False)
             if eo:
@@ -183,9 +182,9 @@ class DeviceServer(Device):
             # Continue scanning until there are no more availed or non-failed
             # nodes
             for path in free:
-                print self.class_name + '::FREE::', free
+                self.log.debug(self.class_name + '::FREE::', free)
                 an = False
-                print '>>Trying path', path
+                self.log.debug('>>Trying path', path)
                 # Try to reserve the device in the registry, as pending
                 r = registry.reserve(path, dspath)
                 # If the insertion fails, sleep and then continue (maybe is in
@@ -209,96 +208,15 @@ class DeviceServer(Device):
                     registry.assign(path, dspath)
                     new.append(path)
                 free = registry.check_available(cls.available)
-                print 'Rescan iteration'
+                self.log.debug('Rescan iteration')
         # Refreshing alternative naming
         self.naturalNaming()
-        # Initializing found nodes
-        self['initializing'] = False
-#       self.init_instrument(partial=new)
         # Clear cached model
         self._rmodel = False
         getattr(p, 'resume_check', lambda:0)()
         return True
-
-    def _get_rescan(self):
-        self.unlock()
-        self['initializing'] = True
-        # Trigger simulators reset
-        if self.desc.has_key('simulators'):
-            self['simulators'] = self['simulators']
-        if not self.ServedClasses:
-            return False
-        dspath = self['fullpath']
-        # Call pre-scan hook on each served object
-        for d in self.devices:
-            registry.assign(d, self)
-            d.pre_scan()
-        self.allavail = []
-
-        def avail(cls, assigned):
-            """Calculates the available device list"""
-            # All possible devices (also connected, failed, connecting...)
-            preassigned = set([d['devpath'] for d in self.devices])
-            print self.class_name + '::PREASSIGNED =>', preassigned
-            print self.class_name + '::CONNECTED =>', cls.available
-            lst0 = cls.available
-            self.allavail += lst0
-            lst = list(set(lst0) - preassigned)
-            print self.class_name + '::PRELIST =>', lst, lst0
-            # Check for devices which are not currently connecting to another
-            # DeviceServer
-            lst = registry.check_available(lst)
-            print self.class_name + '::REGAVAIL =>', lst
-            # Leave only devices which did not already fail or succeed
-            lst = list(set(lst) - set(assigned))
-            print self.class_name + '::AVAIL =>', lst
-            return lst
-
-        for cls in self.ServedClasses:
-            print self.class_name + '::SCANNING::', cls, cls.list_available_devices()
-            # Continue scanning until there are no more availed or non-failed
-            # nodes
-            failed = []
-            succeed = []
-            ndl = avail(cls, failed)
-            while len(ndl) > 0:
-                an = False
-                path = ndl[0]
-                print '>>Trying path', path
-                # Try to insert the device in the registry as pending
-                r = registry.assign(path, dspath)
-                # If the insertion fails, sleep and then continue
-                if not r:
-                    sleep(.5)
-                    ndl = avail(cls, failed)
-                    continue
-                try:
-                    an = self.addNode(path, served_class=cls)
-                    if an:
-                        succeed.append(path)
-                except:
-                    print_exc()
-                    an = False
-                    registry.free(path, dspath)
-                if not an:
-                    failed.append(path)
-                ndl = avail(cls, failed + succeed)
-                print 'Rescan iteration', an, failed, succeed, ndl
-        self.naturalNaming()
-        # Removing non-existent nodes
-        allavail = set(self.allavail)
-        preassigned = set([d['devpath'] for d in self.devices])
-        removing = list(preassigned - allavail)
-        print self.class_name + '::REMOVING NODES =>', removing
-        for rempath in removing:
-            self.removeNode(rempath)
-
-        # Initializing found nodes:
-        self['initializing'] = False
-        self.init_instrument(partial=succeed)
-        self._rmodel = False
-        return True
-
+    
+    
     def get_devlist(self, partial=False,  order=False):
         """Get an ordered device listing. Sub-devices can also be specified."""
         devlist = [d['devpath'] for d in self.devices]
@@ -322,13 +240,10 @@ class DeviceServer(Device):
         - an instrument configuration is being initialized"""
         return self.desc.get('initializing') or self['initInstrument']
 
+    @initializeme()
     def init_instrument(self, name=False, partial=False, presets={}):
         """Load default or instrument configuration for all subdevices"""
-        # avoid doubled calls
-        if self['initializing']:
-            return False
         # Load the preset associated with 'name', to get the proper init order
-        self['initializing'] = True
         Device.init_instrument(self, name, sub=False)
         prio = self.get_devlist(partial).splitlines()
         done = []
@@ -352,16 +267,15 @@ class DeviceServer(Device):
             d.init_instrument(preset)
             done.append(path)
         self['initInstrument'] = 0
-        self['initializing'] = False
         return done
 
     xmlrpc_init_instrument = init_instrument
 
     def close(self):
         """Recursively calls close() an all served devicess"""
-        print 'DeviceServer will now close', self.devices
+        print('DeviceServer will now close', self.devices)
         for b in self.devices:
-            print 'DeviceServer closing:', b, repr(b.close)
+            print('DeviceServer closing:', b, repr(b.close))
             b.close()
-            print 'Done'
+            print('Done')
         Device.close(self)

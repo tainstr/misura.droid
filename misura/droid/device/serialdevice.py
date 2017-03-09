@@ -164,7 +164,7 @@ class Serial(UDevice):
             return self.desc.get('baudrate')
         return self.com.baudrate
 
-    @lockme
+    @lockme()
     def raw(self, msg):
         """Debug. Directly write to serial port and try to read reply"""
         if not getattr(self, 'read', False):
@@ -196,7 +196,7 @@ class Serial(UDevice):
         self.com.flush()
         self.sleep()
 
-    @lockme
+    @lockme()
     def flush(self):
         self._flush()
     xmlrpc_flush = flush
@@ -292,7 +292,7 @@ class Serial(UDevice):
         self.sleep()
         return self.read(minlen=minlen, timeout=timeout)
 
-    @lockme
+    @lockme()
     @retry()
     def writeread(self, msg=False, minlen=-1, timeout=-1):
         """Locked write `msg` and read the reply."""
