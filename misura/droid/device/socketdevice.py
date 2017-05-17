@@ -22,7 +22,7 @@ conf = [
 
 class Socket(Physical, Enumerated):
 
-    """Interfaccia generica per periferiche seriali"""
+    """Generic interface for socket devices"""
     conf_def = deepcopy(Physical.conf_def)
     conf_def += conf
     available = {}

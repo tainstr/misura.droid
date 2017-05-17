@@ -683,8 +683,12 @@ class Device(option.Aggregative, milang.Scriptable, Node):
             self.end_acquisition()
             return
         while True:
-            if not self.control_loop():
-                self.log.debug('Control loop returned False')
+            try:
+                if not self.control_loop():
+                    self.log.debug('Control loop returned False')
+                    break
+            except:
+                self.log.error('control_loop exception', format_exc)
                 break
             if self.desc.get('running') != 1:
                 self.log.debug('Exited from running state')
