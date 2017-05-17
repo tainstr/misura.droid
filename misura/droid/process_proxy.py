@@ -145,7 +145,9 @@ class ProcessProxy(object):
             return obj
         raise BaseException('_read_socket timeout')
 
-    def _read_object(self, name, timeout=10):
+    def _read_object(self, name, timeout=-1):
+        if timeout<0:
+            timeout=self._timeout
         s = self._client_socket(name)
         r = self._read_socket(s, timeout=timeout)
         s.close()
@@ -176,7 +178,7 @@ class ProcessProxy(object):
         pid = str(os.getpid())
         if os.path.exists(self._input_path):
             os.remove(self._input_path)
-        s = self._server_socket('input', 1000, timeout=0.001)
+        s = self._server_socket('input', 1000, timeout=self._timeout)
         # Create served instance
         self._log.debug('Class parameters', self._cls.__name__, self._args, self._kwargs)
         self._instance = self._cls(*self._args, **self._kwargs)
@@ -191,7 +193,7 @@ class ProcessProxy(object):
                 conn, addr = s.accept()
             except:
                 continue
-            conn.settimeout(5)
+            conn.settimeout(self._timeout)
             while go:
                 try:
                     data += conn.recv(1024)
@@ -290,8 +292,8 @@ class ProcessProxy(object):
             # Retry the operation
             self._log.debug('_procedure_call retry on EINTR', packet, format_exc())
             conn, addr = s.accept()
-        conn.settimeout(5)
-        result = self._read_socket(conn)
+        conn.settimeout(self._timeout)
+        result = self._read_socket(conn, timeout=self._timeout)
         conn.close()
         if isinstance(result, BaseException):
             raise result
