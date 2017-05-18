@@ -248,12 +248,13 @@ class Serial(UDevice):
             w = self.com.inWaiting()
             if w == 0:
                 if time() - t > timeout:
+                    self.log.debug('Serial.read: timeout', timeout, minlen, len(red))
                     break
                 r += 1
-                if len(red) >= minlen and r > 2:
+                if len(red) >= minlen and r > 3:
                     break
-#                self.log.debug(
-#                    'Serial.read sleeping...', len(red),  repr(red),  minlen, self.latency)
+                #self.log.debug(
+                #    'Serial.read sleeping...', len(red),  repr(red),  minlen, self.latency)
                 self.sleep()
                 continue
             r = 0

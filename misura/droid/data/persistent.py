@@ -263,7 +263,6 @@ class PersistentConf(option.Conf):
     def get_from_preset(self, opt, preset, extended=False):
         """Read value of option `opt` saved in `preset`"""
         result = self.read_preset(preset)
-        print type(result),len(result)
         if not result:
             return False
         if extended:
