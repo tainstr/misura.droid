@@ -786,8 +786,14 @@ class Instrument(device.Measurer, device.Device):
         self.log.info(
             'Supervisor cycle START', self.root.get('isRunning'), self.isRunning)
         # Infinite call to control_loop(), until True
-        while self.control_loop():
-            continue
+        loop = True
+        while True:
+            try:
+                loop = self.control_loop()
+            except:
+                self.log.error('Supervisor error:', format_exc())
+                break
+            
         if self['closingTest']:
             # the acquisition was stopped as a consequence of calling _stop_acquisition(),
             # which  already set the closingTest flag
