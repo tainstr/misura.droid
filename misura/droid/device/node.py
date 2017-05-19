@@ -313,8 +313,17 @@ class Node(ConfigurationInterface):
         # Clean path
         if len(path) > 0 and path[-1] == '':
             path.pop(-1)
-        if len(path) > 0 and (path[0] == self.naturalName or path[0] == ''):
+        if len(path) > 0 and (path[0] == ''):
             path.pop(0)
+        
+        for dev in self['fullpath'].split(self.separator):
+            if dev=='':
+                continue
+            if path==dev:
+                path.pop(0)
+            else:
+                break
+        
         obj = self
         for p in path:
             obj = obj.subHandlers.get(p, False)
