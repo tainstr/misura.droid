@@ -28,6 +28,7 @@ class Socket(Physical, Enumerated):
     available = {}
     _udev = {}
     enumerated_option = 'socket'
+    protocol = socket.IPPROTO_TCP
 
     def __init__(self, parent=None, node='127.0.0.1:8000'):
         Physical.__init__(self, parent=parent, node=node)
@@ -54,15 +55,15 @@ class Socket(Physical, Enumerated):
             w = True
         if self.com:
             self.com.setsockopt(
-                socket.IPPROTO_TCP, socket.TCP_NODELAY, int(val))
+                self.protocol, socket.TCP_NODELAY, int(val))
         if w:
             self.desc.set('nodelay', val)
         return val
-
+    
     def get_nodelay(self):
         """Get TCP_NODELAY"""
         if self.com:
-            val = self.com.getsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY)
+            val = self.com.getsockopt(self.protocol, socket.TCP_NODELAY)
         else:
             return self.desc.get('nodelay')
         return bool(val)
