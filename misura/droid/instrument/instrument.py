@@ -787,7 +787,7 @@ class Instrument(device.Measurer, device.Device):
             'Supervisor cycle START', self.root.get('isRunning'), self.isRunning)
         # Infinite call to control_loop(), until True
         loop = True
-        while True:
+        while loop:
             try:
                 loop = self.control_loop()
             except:
