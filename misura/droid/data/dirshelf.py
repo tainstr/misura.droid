@@ -65,7 +65,7 @@ class DirShelf(FileBuffer):
         """Object path"""
         if key == '':
             return self.dir + 'self'
-        return self.dir + key + '/' + 'self'
+        return self.dir + str(key) + '/' + 'self'
 
     def set(self, key, val, t=-1, newmeta=True):
         if newmeta:
@@ -91,9 +91,10 @@ class DirShelf(FileBuffer):
 
     def has_key(self, key):
         r = os.path.exists(self.fp(key))
-#       if not r:
-#           print 'no file', self.fp(key)
         return r
+    
+    def __contains__(self, key):
+        return self.has_key(key)
 
     def __delitem__(self, key):
         shutil.rmtree(self.dir + key)
