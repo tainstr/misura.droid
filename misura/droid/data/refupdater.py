@@ -313,7 +313,7 @@ class ReferenceUpdater(object):
             # Scale zerotime
             e[0] -= self.zerotime
             try:
-                out = ref.encode(*e)
+                out = ref.encode(e)
             except:
                 print_exc()
             if out is None:
