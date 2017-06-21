@@ -15,11 +15,11 @@ conf = [
 
     # initializing (Is Initializing)
     {"handle": 'initializing',  "name": 'Is Initializing',
-        "current": False, "type": 'Boolean', "attr": ['Hidden']},
+        "current": False, "type": 'Boolean', "attr": ['Hidden', 'Runtime']},
 
     # isConnected (Is Connected)
     {"handle": 'isConnected',   "name": 'Is Connected',
-        "current": True, "type": 'Boolean', "attr": ['Hidden']},
+        "current": True, "type": 'Boolean', "attr": ['Hidden', 'Runtime']},
 
     # idx (Index in parent device list)
     {"handle": 'idx',   "name": 'Index in parent device list',
@@ -27,7 +27,7 @@ conf = [
 
     # locked (Lock depth)
     {"handle": 'locked',    "name": 'Lock depth',
-        "current": False, "type": 'Boolean', "attr": ['Hidden']},
+        "current": False, "type": 'Boolean', "attr": ['Hidden', 'Runtime']},
 
     # running (Running acquisition)
     {"handle": 'running',   "name": 'Running acquisition', "attr": ['Runtime'],
