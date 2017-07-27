@@ -13,7 +13,7 @@ conf = [
      "current": 'unknown', "type": 'String'},
     {"handle": 'flavour', "name": 'Type',
         "current": 'Standard', "type": 'Chooser',
-        "options": ['Standard', 'Calibration'], "writeLevel":2
+        "options": ['Standard', 'Calibration'], "writeLevel":2, "readLevel": 4,
      },
     {"handle": 'date', "name": 'Started at (h:m:s, dd/mm/yyyy)',
         "current": 0,
@@ -143,7 +143,7 @@ mi.Point(idx=w)
      },
     # duration (Maximum test duration (min))
     #
-    {"handle": 'duration', "name": 'Maximum test duration (min)',
+    {"handle": 'duration', "name": 'Maximum test duration', "max": 60*24*30,
         "current": -1, "type": 'Float', 'unit': 'minute', 'priority': 0
      },
     # cooling (Stop after cooling)
