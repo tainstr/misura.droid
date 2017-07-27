@@ -149,6 +149,7 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
         self.iolist = self.desc.iolist
         self.get_from_preset = self.desc.get_from_preset
         self.compare_presets = self.desc.compare_presets
+        self.set_to_preset = self.desc.set_to_preset
 
         ######
         # Direct publication
@@ -174,6 +175,7 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
         self.xmlrpc_iolist = self.iolist
         self.xmlrpc_get_from_preset = self.get_from_preset
         self.xmlrpc_compare_presets = self.compare_presets
+        self.xmlrpc_set_to_preset = self.set_to_preset
         # History methods
         self.h_get = self.desc.h_get
         self.h_get_history = self.desc.h_get_history
