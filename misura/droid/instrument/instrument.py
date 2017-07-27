@@ -387,15 +387,17 @@ class Instrument(device.Measurer, device.Device):
         k = self.kiln if self.kiln else self
         if not k is self:
             k['running'] = False
+        
+        if not k['powerSwitch']:
+            self['initTest'] = 0
+            msg = k.powerSwitch_message() + '\n Cannot start a new test!'
+            self.log.error(msg)
+            return msg
+        
         kae = self.measure['kilnBeforeStart']
         # not undefined and no closing movement in the thermal cycle and kiln
         # is real kiln (for UT)
-        if kae != -1 and hasattr(k, 'set_motorStatus') and k['tcmix'] != 0:
-            if not k['powerSwitch']:
-                self['initTest'] = 0
-                msg = k.powerSwitch_message() + '\n Cannot start a new test!'
-                self.log.error(msg)
-                return msg
+        if kae != -1 and hasattr(k, 'set_motorStatus'):
             self.log.info('Moving the furnace at the start of the test', kae)
             k.set_motorStatus(kae, block=True)
             self['initTest'] = 2
