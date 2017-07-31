@@ -87,6 +87,9 @@ class Sample(device.Device):
         else:
             a.remove('History')
         self.desc.setattr(opt, 'attr', a)
+        # Recursively set the option to all sub-samples
+        for smp in self.samples:
+            smp.desc.setattr(opt, 'attr', a)
         return val
 
     def get_recFrame(self):
