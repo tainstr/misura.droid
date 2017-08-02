@@ -387,8 +387,8 @@ class Instrument(device.Measurer, device.Device):
         k = self.kiln if self.kiln else self
         if not k is self:
             k['running'] = False
-        
-        if not k['powerSwitch']:
+            
+        if k.has_key('powerSwitch') and not k['powerSwitch']:
             self['initTest'] = 0
             msg = k.powerSwitch_message() + '\n Cannot start a new test!'
             self.log.error(msg)
