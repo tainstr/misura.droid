@@ -91,7 +91,7 @@ rate=max(T1)
 w=mi.Where(T1==rate)
 if w<0: mi.Exit()
 mi.Point(idx=w+1)
-mi.Value(rate/60)
+mi.Value(rate*60)
 
 """, "parent": 'maxHeatingRate', "readLevel": 3, "writeLevel": 3,
         "flags": {'period': -1}, "type": 'Script',
