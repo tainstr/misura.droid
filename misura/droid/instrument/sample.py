@@ -7,9 +7,9 @@ from misura.droid import device
 
 
 conf = [
-    {"handle": 'T',     "name": "Temperature", "type": 'RoleIO',
+    {"handle": 'T',     "name": "Temperature", "type": 'RoleIO', "unit": 'celsius',
         "options": ['/kiln/', 'default', 'Ts']},
-    {"handle": 'initialDimension',  "name": 'Initial sample dimension', 'unit': 'micron',
+    {"handle": 'initialDimension',  "name": 'Initial sample dimension', "unit": 'micron',
         "current": 0,   "min": 0, "type": 'Float'},
     {"handle": 'ii', "name": 'Sample index on device',  "min": 0, "attr": ['Hidden'],
      "max": 20,     "current": 1, "type": 'Integer'},
