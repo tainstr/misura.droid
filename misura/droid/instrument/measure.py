@@ -146,7 +146,7 @@ mi.Point(idx=w)
     #
     {"handle": 'errors', "name": 'Stop on consecutive image analysis errors',
         "max": 500, "current": 100, "step": 1, "min": 1,
-        "flags": {'enabled': True}, "type": 'Integer', "readLevel": 3,
+        "flags": {'enabled': True}, "type": 'Integer', "readLevel": 4,
      },
     # duration (Maximum test duration (min))
     #
