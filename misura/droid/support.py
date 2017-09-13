@@ -40,6 +40,7 @@ class Support(device.Device):
     conf_def = deepcopy(device.Device.conf_def)
     conf_def += [
         # Conf Backups
+        {"handle": 'stopUI', "name": 'Stop embedded UI', "current": False, "type": 'Boolean',"writeLevel":5},
         {"handle": u'backups', "name": u'Available backups',
             "type": 'FileList', 'attr': ['Runtime']},
         {"handle": u'doBackup', "name": u'New configuration backup',
@@ -88,6 +89,7 @@ class Support(device.Device):
             "type": 'String', "parent": 'network'},
         {"handle": u'reboot', "name": u'Reboot machine OS', "type": 'Button'},
         {"handle": u'halt', "name": u'Shutdown machine OS', "type": 'Button'},
+        
     ]
 
     def __init__(self, parent=None, node='support'):
@@ -97,6 +99,15 @@ class Support(device.Device):
         self['comment'] = 'Support, upgrade, backup, restore, get assistance'
         self['devpath'] = 'support'
         self.post_connection()
+        self.set_stopUI(self['stopUI'])
+
+            
+    def set_stopUI(self, val):
+        if val:
+            self.log.debug('Stopping LightDM')
+            r = go('sudo service lightdm stop')
+            self.log.debug(r[1])
+        return val          
 
     excl_conf = '--exclude "sessile_betas.h5" --exclude "*/data/*" --exclude "*/backups/*" --exclude "*/packages/*" --exclude "*/exeBackups/*"'
     """Exclude files from configuration backup."""
