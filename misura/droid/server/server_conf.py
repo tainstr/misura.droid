@@ -31,6 +31,7 @@ conf = [
         "options":['Never', '5 min', '1 hour', '4 hours', '12 hours', '1 day', '3 days'], 
         "values": [ 0,       300,    3600,        4*3600,    12*3600, 24*3600, 3*24*3600],
     },
+
     # scanning (Scanning for devices)
     {"handle": 'scanning', "name": 'Scanning for devices',
         "current": False, "type": 'Boolean', "attr": ['ReadOnly', 'Runtime']	},
@@ -106,43 +107,36 @@ conf = [
     {"handle": 'eq_mac', "name": 'External MAC address',
         "current": '', "writeLevel": 6, "type": 'String'},
     # Plugin list
-    {"handle": 'eq_plugin', "name": 'Load Plugins',
+    {"handle": 'eq_plugin', "name": 'Load Plugins', 'writeLevel': 5,
      "current": plugins, "type": 'TextArea'},
     # eq_kiln (Enable KILN)
-    {"handle": 'eq_kiln', "name": 'Enable KILN',
+    {"handle": 'eq_kiln', "name": 'Enable KILN', 'writeLevel': 5,
         "current": True, "type": 'Hidden',
      },
     # eq_hsm (Enable HSM Heating Microscope)
     {"handle": 'eq_hsm', "name": 'Enable Heating Microscope',
-     "current": 1, "type": 'Boolean'},
+     "current": 1, "type": 'Boolean', 'writeLevel': 5,},
     # eq_post (Enable Post-Analysis)
     #{"handle": 'eq_post', "name": 'Enable Post-Analysis',
     #	"current": 1, "type": 'Boolean'},
     {"handle": 'eq_vertical', "name": 'Enable Vertical Optical Dilatometer',
-     "current": 1, "type": 'Boolean'},
+     "current": 1, "type": 'Boolean', 'writeLevel': 5,},
     {"handle": 'eq_horizontal', "name": 'Enable Horizontal Optical Dilatometer',
-     "current": True, "type": 'Boolean'},
+     "current": True, "type": 'Boolean', 'writeLevel': 5,},
     {"handle": 'eq_flex', "name": 'Enable Optical Fleximeter',
-        "current": 1, "type": 'Boolean'},
+        "current": 1, "type": 'Boolean', 'writeLevel': 5,},
     {"handle": 'eq_dta', "name": 'DTA',
-        "current": 1, "type": 'Boolean'},
+        "current": 1, "type": 'Boolean', 'writeLevel': 5,},
     {"handle": 'eq_motion', "name": 'Has motion control',
-     "current": True,  "type": 'Boolean'},
+     "current": True,  "type": 'Boolean', 'writeLevel': 5,},
     {"handle": 'eq_serialPorts', "name": 'Max COM serial ports to be scanned',
-     "current": 2, "max": 10, "step": 1, "min": 0, "type": 'Integer'},
-    #{"handle": 'eq_nbalance', "name": 'Weighting system present',
-    #	"current": True,"type": 'Boolean'},
-    #{"handle": 'eq_ntherm', "name": 'Number of connected thermoregulators',
-    #	"current": 1, "max": 3, "step": 1, "min": 1, "type": 'Integer'},
-    #{"handle": 'eq_nstepper', "name": 'Number of connected stepperboards',
-    #	"current": 1, "max": 2, "step": 1, "min": 1,"type": 'Integer'},
-    #{"handle": 'eq_ncam', "name": 'Number of connected cameras',
-    # s	"current": 1,"max": 3,"step": 1,"min": 1,"type": 'Integer'},
+     "current": 2, "max": 10, "step": 1, "min": 0, "type": 'Integer', 'writeLevel': 5,},
+    
     # cs (Customer Information)
     {"handle": 'cs', "name": 'Customer Information', "type": 'Section'},
     # cs_org (Organization)
     {"handle": 'cs_org', "name": 'Organization',
-     "current": 'Expert System Solutions S.r.l.', "type": 'String'},
+     "current": 'TA Instruments / Waters LLC', "type": 'String'},
     # cs_dept (Department)
     {"handle": 'cs_dept', "name": 'Department',
         "current": 'Research and Development', "type": 'String'},
