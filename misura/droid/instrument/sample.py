@@ -15,8 +15,6 @@ conf = [
      "max": 20,     "current": 1, "type": 'Integer'},
     {"handle": 'frame',     "name": 'Last frame',
         "attr": ['Runtime', 'History'], "type": 'Image'},
-    {"handle": 'bayes',     "name": 'Last Bayes frame',
-        "attr": ['Runtime'], "type": 'Image'},
     {"handle": 'profile',   "name": 'Last profile',
      "current": [(), [], []], "attr": ['Runtime', 'History', 'Hidden'], "type": 'Profile'},
     {"handle": 'filteredProfile',   "name": 'Last profile',
