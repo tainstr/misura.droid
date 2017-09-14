@@ -355,11 +355,9 @@ class Device(option.Aggregative, milang.Scriptable, Node):
 
     def check_children(self):
         """Propagate check() to all subdevices."""
-        done = []
+        done = [self]
         for name, obj in self.subHandlers.items():
             if obj in done:
-                continue
-            if obj is self:
                 continue
             # Non-Device children
             if not hasattr(obj, '__getitem__'):
@@ -368,8 +366,6 @@ class Device(option.Aggregative, milang.Scriptable, Node):
                 self.log.error(
                     'Child object does not have a description:', name, obj)
                 del self.subHandlers[name]
-                continue
-            if obj is self:
                 continue
             ck = getattr(obj, 'check', False)
             if not ck:
@@ -387,7 +383,46 @@ class Device(option.Aggregative, milang.Scriptable, Node):
             if anerr >= 0:
                 obj['anerr'] = anerr
             done.append(obj)
-
+            
+    def do_self_test(self):
+        """Returns a list of (status, message) validation items"""
+        return True, []
+    
+    def get_selfTest(self):
+        """Returns local validation items"""
+        return [self.desc.get('selfTest')[0]]+self.do_self_test()[1]
+            
+    def do_iter_test(self, done=False):
+        """Collects validation items from across all subdevices"""
+        p = self['fullpath']
+        done = done or [p]
+        status = []
+        for item in self.do_self_test()[1]:
+            status.append(item+[p])
+        ok = True
+        for name, obj in self.subHandlers.items():
+            if name=='desc':
+                continue
+            if not getattr(obj, 'do_iter_test', False):
+                self.log.error('Child object cannot be validated', name, obj)
+                continue
+            p = obj['fullpath']
+            if p in done:
+                continue
+            ok1, status1 = obj.do_iter_test(done)
+            for item in status1:
+                status.append(item+[p])
+            ok *= ok1
+            done.append(p)
+        return ok, status
+    
+    xmlrpc_do_iter_test = do_iter_test
+            
+    def get_validate(self):
+        """Pre-test status validation and error reporting"""
+        cur = self.desc.get('validate')[0]
+        return [cur]+self.do_iter_test()[1]
+    
     def lock(self, blocking=True, exc=False):
         """Blocks current operations on device.
         `blocking`=False immediately returns the lock status (default: True, wait until free).
