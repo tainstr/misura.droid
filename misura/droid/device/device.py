@@ -386,7 +386,24 @@ class Device(option.Aggregative, milang.Scriptable, Node):
             
     def do_self_test(self):
         """Returns a list of (status, message) validation items"""
-        return True, []
+        r = []
+        if self['initializing']:
+            r.append([0, 'Device is still initializing'])
+            self.log.warning('Device is still initializing')
+        if self['locked']:
+            r.append([0, 'Device is locked'])
+            self.log.warning('Device is locked')
+        for key in self.desc.keys():
+            if key not in self.roledev:
+                # Not a Role/RoleIO
+                continue
+            a = self.desc.getAttributes(key)
+            if 'Required' not in a:
+                # Not a Required Role
+                continue
+            self.log.warning('Required role is not assigned', key)
+            r.append([0, 'Required role is not assigned: '+key])
+        return True, r
     
     def get_selfTest(self):
         """Returns local validation items"""
