@@ -403,7 +403,7 @@ class Device(option.Aggregative, milang.Scriptable, Node):
                 continue
             self.log.warning('Required role is not assigned', key)
             r.append([0, 'Required role is not assigned: '+key])
-        return True, r
+        return len(r)==0, r
     
     def get_selfTest(self):
         """Returns local validation items"""
