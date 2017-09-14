@@ -269,15 +269,16 @@ class PersistentConf(option.Conf):
             return result[opt]
         return result[opt]['current']
     
-    def set_to_preset(self, opt, preset, val):
+    def set_to_preset(self, opt, preset, val, attr=False):
         """Sets option `opt` value to `val` in specified `preset`.
         It will not actually loading the preset or set the value in memory."""
+        attr = attr or 'current'
         preset_path = os.path.join(self.conf_dir, preset + params.conf_ext)
         if not os.path.exists(preset_path):
             self.log.error('Preset does not exist: cannot save into', preset_path)
             return False
         store = option.CsvStore(preset_path)
-        store.desc[opt]['current'] = val
+        store.desc[opt][attr] = val
         self.preset_cache[preset] = store.desc
         store.write_file()
         return True
