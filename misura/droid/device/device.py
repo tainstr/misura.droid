@@ -410,8 +410,7 @@ class Device(option.Aggregative, milang.Scriptable, Node):
             if p in done:
                 continue
             ok1, status1 = obj.do_iter_test(done)
-            for item in status1:
-                status.append(item+[p])
+            status += status1
             ok *= ok1
             done.append(p)
         return ok, status
