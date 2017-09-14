@@ -52,7 +52,7 @@ class Device(option.Aggregative, milang.Scriptable, Node):
         return self
 
     @classmethod
-    def served_by(cls, DeviceServerClass, original=False):
+    def served_by(cls, DeviceServerClass, original=False, current=True):
         """Performs registration operations when this class is served by a DeviceServer"""
         if original is not False:
             cls = original
@@ -61,7 +61,7 @@ class Device(option.Aggregative, milang.Scriptable, Node):
             return False
         # Add class enabling option to the conf
         DeviceServerClass.conf_def.append({"handle": 'scan_' + cls.__name__,
-                                           "name": 'Scan for ' + cls.__name__, "current": True,
+                                           "name": 'Scan for ' + cls.__name__, "current": current,
                                            "type": 'Boolean', "writeLevel": 5, "readLevel": 4,
                                            # Causes a set_func call when a
                                            # preset is loaded
