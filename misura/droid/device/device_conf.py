@@ -72,9 +72,9 @@ conf = [
     {"handle": 'maxfreq',   "name": 'Max acquisition frequency', "current": 20,
         "min": 0.01, "max": 1000, "type": 'Float', "unit": 'hertz', "readLevel": 4},
         
-    {"handle": 'validate', "name": 'Validate',"current": [[('Status', 'Boolean'), ('Test', 'String'), ('Path', 'String')]],
-        "attr": ['ReadOnly'],"type": 'Table'},
+    {"handle": 'validate', "name": 'Recursive validation',"current": [[('Status', 'Boolean'), ('Test', 'String'), ('Path', 'String')]],
+        "attr": ['ReadOnly', 'Hidden'],"visible": [1,1,0], "type": 'Table'},
     {"handle": 'selfTest', "name": 'Self test', "current": [[('Status', 'Boolean'), ('Test', 'String')]],
-        "attr": ['ReadOnly'],"type": 'Table'},
+        "attr": ['ReadOnly'],"visible": [1,1,0],"type": 'Table'},
 
 ]
