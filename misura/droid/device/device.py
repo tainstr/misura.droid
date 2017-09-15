@@ -394,15 +394,17 @@ class Device(option.Aggregative, milang.Scriptable, Node):
             r.append([0, 'Device is locked'])
             self.log.warning('Device is locked')
         for key in self.desc.keys():
-            if key not in self.roledev:
+            role = self.roledev.get(key, None)
+            if role is None:
                 # Not a Role/RoleIO
                 continue
             a = self.desc.getAttributes(key)
             if 'Required' not in a:
                 # Not a Required Role
                 continue
-            self.log.warning('Required role is not assigned', key)
-            r.append([0, 'Required role is not assigned: '+key])
+            if not role[0]:
+                self.log.warning('Required role is not assigned', key)
+                r.append([0, 'Required role is not assigned: '+key])
         return len(r)==0, r
     
     def get_selfTest(self):
