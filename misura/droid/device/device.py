@@ -390,9 +390,6 @@ class Device(option.Aggregative, milang.Scriptable, Node):
         if self['initializing']:
             r.append([0, 'Device is still initializing'])
             self.log.warning('Device is still initializing')
-        if self['locked']:
-            r.append([0, 'Device is locked'])
-            self.log.warning('Device is locked')
         for key in self.desc.keys():
             role = self.roledev.get(key, None)
             if role is None:
