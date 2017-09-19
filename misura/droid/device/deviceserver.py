@@ -216,6 +216,23 @@ class DeviceServer(Device):
         getattr(p, 'resume_check', lambda:0)()
         return True
     
+    def do_self_test(self):
+        """Append an error if a configured enumerated device is missing"""
+        status, msgs = super(DeviceServer, self).do_self_test()
+        registry = get_registry()
+        for cls in self.ServedClasses:
+            eo = getattr(cls, 'enumerated_option', False)
+            if not eo: 
+                # Not an enumerated
+                continue
+            free = list(registry.check_available(cls.available))
+            if not len(free):
+                # All devices are correctly detected
+                continue
+            status = False
+            self.log.warning('Configured devices could not be found:', cls.__name__, free)
+            map(lambda p: msgs.append([0, '{} not found: {}'.format(cls.__name__, p)]), free)
+        return status, msgs
     
     def get_devlist(self, partial=False,  order=False):
         """Get an ordered device listing. Sub-devices can also be specified."""
