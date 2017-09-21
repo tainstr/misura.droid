@@ -3,6 +3,7 @@
 import os
 from copy import deepcopy
 import datetime
+from time import time
 from commands import getstatusoutput as go
 from . import parameters as params
 import device
@@ -29,6 +30,18 @@ def get_lib_info():
         e = elf.find(']')
         out += '{} -> {}\n'.format(p, elf[i:e])
     return out
+
+def parse_vmstat():
+    vm = {}
+    r = go('vmstat -s -S M')[1]
+    r=r.replace('  ','').replace('  ','').replace('\n ','\n')
+    if r[0]==' ': r = r[1:]
+    for line in r.splitlines():
+        line = line.split(' ')
+        val = int(line.pop(0))
+        key = ' '.join(line)
+        vm[key] = val
+    return vm
 
 tar_log_limit = 1e6
 
@@ -90,6 +103,24 @@ class Support(device.Device):
         {"handle": u'reboot', "name": u'Reboot machine OS', "type": 'Button'},
         {"handle": u'halt', "name": u'Shutdown machine OS', "type": 'Button'},
         
+        {"handle": u'sys', "name": u'System Info', "type": 'Section'},
+        {"handle": u'sys_usedRam', "name": u'Used RAM', "unit": "percent",
+            "attr":['ReadOnly', 'History'], "type": 'Float'},
+        {"handle": u'sys_ram', "name": u'Total RAM', "unit": "megabyte",
+            "attr":['ReadOnly'], "type": 'Float'},
+        {"handle": u'sys_usedSwap', "name": u'Used swap', "unit": "percent",
+            "attr":['ReadOnly', 'History'], "type": 'Float'},
+        {"handle": u'sys_swap', "name": u'Total swap', "unit": "megabyte",
+            "attr":['ReadOnly'], "type": 'Float'},
+        {"handle": u'sys_cpu', "name": u'CPU load', "unit": "percent",
+            "attr":['ReadOnly', 'History'], "type": 'Float'},
+        {"handle": u'sys_cpuTicks', "name": u'Active CPU ticks',
+            "attr":['ReadOnly', 'Runtime'], "type": 'Float'},
+        {"handle": u'sys_cpuTicksIdle', "name": u'Idle CPU ticks',
+            "attr":['ReadOnly', 'Runtime'], "type": 'Float'},
+        {"handle": u'sys_time', "name": u'Last system read',
+            "attr":['ReadOnly', 'Runtime'], "type": 'Float'},
+        
     ]
 
     def __init__(self, parent=None, node='support'):
@@ -100,6 +131,7 @@ class Support(device.Device):
         self['devpath'] = 'support'
         self.post_connection()
         self.set_stopUI(self['stopUI'])
+        self.vmstat()
 
             
     def set_stopUI(self, val):
@@ -236,3 +268,50 @@ class Support(device.Device):
 
     def project_root(self):
         return "/".join(params.mdir.split("/")[:-4])
+    
+    def vmstat(self):
+        vm=parse_vmstat()
+        t=time()
+        self['sys_ram'] = vm['M total memory']
+        self['sys_swap'] = vm['M total swap']
+        self['sys_usedRam'] = 100.*vm['M used memory']/vm['M total memory']
+        self['sys_usedSwap'] = 100.*vm['M used swap']/vm['M total swap']
+        cpu = [vm[k] for k in ['non-nice user cpu ticks',
+                               'nice user cpu ticks',
+                               'IO-wait cpu ticks',
+                               'IRQ cpu ticks',
+                               'softirq cpu ticks',
+                               'stolen cpu ticks']]
+        dt = t-self['sys_time']
+        if dt<0:
+            self['sys_time'] = t
+            return vm
+        
+        cpu = sum(cpu)
+        dcpu = cpu-self['sys_cpuTicks']
+        didle = vm['idle cpu ticks']-self['sys_cpuTicksIdle']
+        self['sys_cpu'] = 100.*dcpu/(dcpu+didle)
+        self['sys_time'] = t
+        self['sys_cpuTicks'] = cpu
+        self['sys_cpuTicksIdle'] = vm['idle cpu ticks']
+        return vm
+        
+    
+    def get_sys_usedRam(self):
+        self.vmstat()
+        return self.desc['sys_usedRam']
+    
+    def get_sys_usedSwap(self):
+        self.vmstat()
+        return self.desc['sys_usedSwap']
+    
+    def get_sys_cpu(self):
+        self.vmstat()
+        return self.desc['sys_cpu']
+    
+    def check(self):
+        self.vmstat()
+        return super(Support, self).check()
+
+    
+
