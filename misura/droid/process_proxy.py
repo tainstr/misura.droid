@@ -24,7 +24,8 @@ class ProcessProxy(object):
     _pid_path = ''
     _deleted = False
     _unpickled = False
-    _max_restarts = -1
+    # Beware max recursion depth!
+    _max_restarts = 100
     _timestamp = -1
 
     def __init__(self, cls, base_path='/tmp/misura', exit_on_exception=False):
@@ -218,6 +219,7 @@ class ProcessProxy(object):
     def _start(self, *args, **kwargs):
         # Remove old sockets and pid file
         self._cleanup()
+        self._stop()
         #TODO: user the spawn context in Python3!
         #ctx = multiprocessing.get_context("spawn")
         #ctx.Process(...
@@ -228,7 +230,7 @@ class ProcessProxy(object):
         self._process.start()
         sleep(1)        
         if not os.path.exists(self._pid_path):
-            self._log.debug( 'ProcessProxy unable to start!!!', self._cls.__name__, self._args, self._kwargs)
+            self._log.debug('ProcessProxy unable to start!!!', self._cls.__name__, self._args, self._kwargs)
             raise RuntimeError('ProcessProxy cannot start!!!')
         self._set_logging(self._log_path, self._log_owner)
         self._log.debug('ProcessProxy started', self._pid_path)

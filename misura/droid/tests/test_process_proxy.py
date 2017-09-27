@@ -22,6 +22,10 @@ class DummyCallable(object):
 
     def get(self, name):
         return getattr(self, name, 'UNDEFINED')
+    
+    def sleep(self,t):
+        sleep(t)
+        return True
 
 class TestProcessProxy(unittest.TestCase):
 
@@ -99,7 +103,18 @@ class TestProcessProxy(unittest.TestCase):
         self.assertGreater(ts1, ts)
         pp._stop()
         
-
+    def _test_recursion(self):
+	return
+        pp = ProcessProxy(DummyCallable)
+        pp._timeout = 0.001
+        pp._max_restarts = -1
+        pp._start(1)
+        for i in range(2000):
+            print 'CYCLE',i
+            try:
+                pp._start(1)
+            except:
+                print_exc()
 
 
 if __name__ == "__main__":
