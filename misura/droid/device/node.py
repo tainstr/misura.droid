@@ -192,6 +192,7 @@ class Node(ConfigurationInterface):
                 continue
             if k in forbidden_node_names:
                 continue
+            del self.subHandlers[k]
             print 'Closing sub handler', k
             try:
                 v.close()

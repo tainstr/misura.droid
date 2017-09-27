@@ -186,6 +186,7 @@ class Instrument(device.Measurer, device.Device):
             self.log.debug('Closing sample object nr.%i' % i)
             smp.close()
             del smp
+            del self.subHandlers[name]
 
     def get_Samples(self):
         return self.measure['nSamples']
