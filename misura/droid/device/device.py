@@ -349,40 +349,31 @@ class Device(option.Aggregative, milang.Scriptable, Node):
         multiprocessing.active_children()
         # Refresh running status
         self['running']
-        self.check_children()
-        return True
+        r = self.check_children()
+        return r
     xmlrpc_check = check
 
     def check_children(self):
         """Propagate check() to all subdevices."""
         done = [self]
-        for name, obj in self.subHandlers.items():
+        ret = 1
+        for obj in self.devices:
             if obj in done:
                 continue
-            # Non-Device children
-            if not hasattr(obj, '__getitem__'):
-                continue
-            if getattr(obj, 'desc', False) is False:
-                self.log.error(
-                    'Child object does not have a description:', name, obj)
-                del self.subHandlers[name]
-                continue
-            ck = getattr(obj, 'check', False)
-            if not ck:
-                continue
-            r = 0
             try:
-                r = ck()
+                r = obj.check()
             except:
                 self.log.error('check error', format_exc())
-            if not r:
-                r = -1
+            count = r or -1
             # Increase/decrease error count
-            anerr = obj['anerr'] - r
-            # Avoid below-zero runaway
+            anerr = obj['anerr'] - count
+            # Avoid below-zero
             if anerr >= 0:
                 obj['anerr'] = anerr
             done.append(obj)
+            ret *= r
+        return ret
+        
             
     def do_self_test(self):
         """Returns a list of (status, message) validation items"""
@@ -412,15 +403,15 @@ class Device(option.Aggregative, milang.Scriptable, Node):
         """Collects validation items from across all subdevices"""
         p = self['fullpath']
         done = done or [p]
+        ok = self.check()
         status = []
+        if not ok:
+            status.append([0, 'Periodic check is failing', p])
         for item in self.do_self_test()[1]:
             status.append(item+[p])
-        ok = True
-        for name, obj in self.subHandlers.items():
-            if name=='desc':
-                continue
-            if not getattr(obj, 'do_iter_test', False):
-                self.log.error('Child object cannot be validated', name, obj)
+        for obj in self.devices:
+            if not getattr(obj, 'do_iter_test', False) or not getattr(obj,'desc', False):
+                self.log.error('Child object cannot be validated', obj)
                 continue
             p = obj['fullpath']
             if p in done:
