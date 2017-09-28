@@ -275,7 +275,8 @@ class Support(device.Device):
         self['sys_ram'] = vm['M total memory']
         self['sys_swap'] = vm['M total swap']
         self['sys_usedRam'] = 100.*vm['M used memory']/vm['M total memory']
-        self['sys_usedSwap'] = 100.*vm['M used swap']/vm['M total swap']
+        if vm['M total swap']:
+            self['sys_usedSwap'] = 100.*vm['M used swap']/vm['M total swap']
         cpu = [vm[k] for k in ['non-nice user cpu ticks',
                                'nice user cpu ticks',
                                'IO-wait cpu ticks',
