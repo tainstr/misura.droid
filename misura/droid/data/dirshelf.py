@@ -131,7 +131,7 @@ class DirShelf(FileBuffer):
         for k, v in it:
             yield v
             
-    def values(self):
+    def values(self, key=''):
         return [it[1] for it in self.items(key)]
             
     def copy(self, key=''):

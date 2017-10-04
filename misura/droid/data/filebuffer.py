@@ -2,12 +2,10 @@
 """Filesystem-level CircularBuffer implementation"""
 import os
 import fcntl
-from fcntl import LOCK_EX, LOCK_SH, LOCK_UN, flock, F_GETLK, F_WRLCK, F_RDLCK, F_UNLCK
+from fcntl import LOCK_EX, LOCK_UN, F_WRLCK, LOCK_SH
 import struct
-from time import sleep
 import mmap
 import collections
-from time import time
 import numpy as np
 from cStringIO import StringIO
 import functools
@@ -21,18 +19,6 @@ from misura.canon import csutil
 from misura.droid import utils
 
 flk = struct.pack('hhqql', F_WRLCK, 0, 0, 0, 0)
-
-
-def wait_unlock(fd, maxret=100):
-    while maxret > 0:
-        out = fcntl.fcntl(fd, F_GETLK, flk)
-        out = struct.unpack('hhqql', out)
-        if out[0] == F_UNLCK:
-            return True
-        print 'wait_unlock', out
-        sleep(0.01)
-        maxret -= 1
-    raise exceptions.IOError('Impossible to acquire exclusive lock')
 
 
 def exclusive(func, lock=LOCK_EX):
@@ -53,11 +39,6 @@ def exclusive(func, lock=LOCK_EX):
     return exclusive_wrapper
 
 
-def shared(func):
-    """fopen with shared locking"""
-    return exclusive(func, lock=LOCK_SH)
-
-
 
 def clean_cache(obj):
     """Shrink cache to its maximum length by closing oldest files."""
@@ -69,6 +50,9 @@ def clean_cache(obj):
         os.close(oldfd)
     return i
 
+def shared(func):
+    """fopen with shared locking"""
+    return exclusive(func, lock=LOCK_SH)
 
 class FileBuffer(object):
 

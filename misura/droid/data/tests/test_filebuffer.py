@@ -4,10 +4,10 @@
 import unittest
 import shutil
 import os
-import exceptions
 import fcntl
 from fcntl import flock, LOCK_SH, LOCK_EX, LOCK_NB
 from time import time, sleep
+import multiprocessing
 
 #from misura import utils_testing as ut
 
@@ -221,6 +221,59 @@ class FileBuffer(unittest.TestCase):
         self.assertTupleEqual(fb.get_idx(p, 0), fb.get_idx(p, 9))
         self.assertEqual(fb.high, 0)
         self.assertEqual(fb.count, 10)
+        
+    def test_performance(self):
+        self.fb.idx_entries = 2
+        data = 'a'*int(1e3)
+        w_tot = multiprocessing.Value('f')
+        w_tot.value = 0
+        r_tot = multiprocessing.Value('f')
+        r_tot.value = 0
+        #from misura.canon.csutil import profile
+        #@profile
+        def stress_write(pid, dat=data, dt=10):
+            i = 0
+            t0=time()
+            while time()-t0<dt:
+                self.fb.write(p+str(pid), dat)
+                #self.fb.get_idx(p+str(pid), 0)
+                i+=1
+            v = 1.*i/dt
+            print 'W', pid, v
+            w_tot.value += v
+            
+            
+        def stress_read(pid, dt=10):
+            i = 0
+            t0 = time()
+            while time()-t0<dt:
+                self.fb.get_idx(p+str(pid), 0)
+                i += 1
+            v = 1.*i/dt
+            print 'R', pid, v
+            r_tot.value += v
+            
+        
+            
+        w_concurrency = 2
+        r_concurrency = 2
+        w = []
+        r = []
+        for i in range(w_concurrency):
+            w.append(multiprocessing.Process(target=stress_write, args=(i, )))      
+            w[-1].start()
+            sleep(0.1)
+            for j in range(r_concurrency):
+                r.append( multiprocessing.Process(target=stress_read, args=(i, )))
+                r[-1].start()
+                
+        # Stop all
+        j = lambda p: p.join()
+        map(j, w)
+        map(j, r)
+            
+        print 'TOT', w_tot.value+r_tot.value, w_tot.value, r_tot.value
+        
 
 
 if __name__ == "__main__":
