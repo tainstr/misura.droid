@@ -45,6 +45,8 @@ def parse_vmstat():
 
 tar_log_limit = 1e6
 
+def get_today_string():
+    return datetime.datetime.now().strftime("%Y_%m_%d_%H-%M-%S")
 
 class Support(device.Device):
 
@@ -60,6 +62,10 @@ class Support(device.Device):
             "type": 'Button', "parent": 'backups'},
         {"handle": u'doRestore', "name": u'Restore configuration backup',
             "type": 'Button', "parent": 'backups'},
+        {"handle": u'backupPackage', "name": u'Last applied backup name',
+            "type": 'String', 'attr': ['ReadOnly'], "parent":'backups'},
+        {"handle": u'backupDate', "name": u'Last applied backup date',
+            "type": 'String', 'attr': ['ReadOnly'], "parent":'backups'},
         # Exe backups
         {"handle": u'exeBackups', "name": u'Available software backups',
             "type": 'FileList', 'attr': ['Runtime']},
@@ -85,6 +91,10 @@ class Support(device.Device):
         # System info
         {"handle": u'version', "name": u'Misura version',
             "type": 'String', 'attr': ['ReadOnly']},
+        {"handle": u'versionPackage', "name": u'Last applied package name',
+            "type": 'String', 'attr': ['ReadOnly'], "parent":'version'},
+        {"handle": u'versionDate', "name": u'Last applied package date',
+            "type": 'String', 'attr': ['ReadOnly'], "parent":'version'},
         {"handle": u'libs', "name": u'Loaded libraries info',
             "type": 'Button'},
         {"handle": u'env', "name": u'Environment variables', "type": 'Button'},
@@ -154,7 +164,7 @@ class Support(device.Device):
             os.makedirs(odir)
         # TODO: migrate to tarfile implementation providing progress updates
         if not outfile:
-            outfile = datetime.datetime.now().strftime("%Y_%m_%d_%H-%M-%S")
+            outfile = get_today_string()
         outfile = os.path.join(odir, outfile)
         n = 1
         outfile1 = outfile
@@ -187,8 +197,13 @@ class Support(device.Device):
             self.log.debug('Truncating restore output', len(msg))
             msg = msg[:tar_log_limit] + '\n...[truncated]...'
         self.log.info(
-            'Succesfully restored archive {} to {} [exit:{}]:'.format(source, dest, r[0]), msg)
+            'Successfully restored archive {} to {} [exit:{}]:'.format(source, dest, r[0]), msg)
         return True, msg
+    
+    def save_last_version_info(self, prefix, package_name):
+        self[prefix+'Package'] = package_name
+        self[prefix+'Date'] = get_today_string()
+        self.save()     
 
     def get_doBackup(self):
         """Perform configuration backup."""
@@ -198,7 +213,10 @@ class Support(device.Device):
     def get_doRestore(self):
         """Perform configuration restore"""
         source = self.desc.getConf_dir() + 'backups/' + self['backups']
-        return self.do_restore(source, params.confdir)[1]
+        status, msg = self.do_restore(source, params.confdir)
+        if status:
+            self.save_last_version_info('backup', 'backups://'+self['backups'])
+        return msg
 
     def get_doExeBackup(self):
         """Perform configuration backup."""
@@ -208,7 +226,10 @@ class Support(device.Device):
     def get_doExeRestore(self):
         """Perform configuration restore"""
         source = self.desc.getConf_dir() + 'exeBackups/' + self['exeBackups']
-        return self.do_restore(source, self.project_root())[1]
+        status, msg = self.do_restore(source, self.project_root())
+        if status:
+            self.save_last_version_info('version', 'exeBackups://'+self['exeBackups'])
+        return msg
 
     def get_applyExe(self):
         """Apply software version."""
@@ -237,6 +258,7 @@ class Support(device.Device):
         self['upgradeProgress'] = 0
         if status:
             msg = 'Upgrade to {} finished successfully. \nPlease restart Misura to apply it!\n'.format(self['packages'])
+            self.save_last_version_info('version', 'packages://'+self['packages'])
         else:
             msg = 'Failed to upgrade to {}!\n'.format(self['packages'])
         self.log.critical(msg)

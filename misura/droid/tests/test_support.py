@@ -83,10 +83,10 @@ class Support(unittest.TestCase):
         # Go in the correct position
         os.chdir('/')
         # Now restore first version
-        r = self.s.do_restore(p1 + ls1, p)
+        st, r = self.s.do_restore(p1 + ls1, p)
         print 'Restore 1\n', r
         # Check output
-        self.assertTrue(r)
+        self.assertTrue(st)
         self.assertIn('./file', r)
 
         # Check restored file contents
@@ -94,10 +94,10 @@ class Support(unittest.TestCase):
         self.assertEqual(r, 'test1')
 
         # Now restore second version
-        r = self.s.do_restore(p1 + ls2, p)
+        st, r = self.s.do_restore(p1 + ls2, p)
         print 'Restore 2\n', r
         # Check output
-        self.assertTrue(r)
+        self.assertTrue(st)
         self.assertIn('./file', r)
 
         # Check restored file contents
