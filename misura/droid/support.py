@@ -169,14 +169,14 @@ class Support(device.Device):
         if len(msg) > tar_log_limit:
             self.log.debug('Truncating backup output', len(msg))
             msg = msg[:tar_log_limit] + '\n...[truncated]...'
-        self.log.info('New backup finished:', r[0], msg)
+        self.log.info('New backup was successful. These files were archived:', r[0], msg)
         return msg
 
     def do_restore(self, source, dest):
-        """Generalized restore."""
+        """Generalized restore. Returns status and message."""
         if not os.path.exists(source):
             self.log.error('Selected backup file does not exist:', source)
-            return 'Selected backup does not exist: ' + source
+            return False, 'Selected backup does not exist: ' + source
         # As config is stored with absolute paths, a simple untar should
         # restore everything
         cmd = 'tar -C "{}" -xvf "{}"'.format(dest, source)
@@ -187,8 +187,8 @@ class Support(device.Device):
             self.log.debug('Truncating restore output', len(msg))
             msg = msg[:tar_log_limit] + '\n...[truncated]...'
         self.log.info(
-            'Restored backup {} to {} [exit:{}]:'.format(source, dest, r[0]), msg)
-        return msg
+            'Succesfully restored archive {} to {} [exit:{}]:'.format(source, dest, r[0]), msg)
+        return True, msg
 
     def get_doBackup(self):
         """Perform configuration backup."""
@@ -198,7 +198,7 @@ class Support(device.Device):
     def get_doRestore(self):
         """Perform configuration restore"""
         source = self.desc.getConf_dir() + 'backups/' + self['backups']
-        return self.do_restore(source, params.confdir)
+        return self.do_restore(source, params.confdir)[1]
 
     def get_doExeBackup(self):
         """Perform configuration backup."""
@@ -208,7 +208,7 @@ class Support(device.Device):
     def get_doExeRestore(self):
         """Perform configuration restore"""
         source = self.desc.getConf_dir() + 'exeBackups/' + self['exeBackups']
-        return self.do_restore(source, self.project_root())
+        return self.do_restore(source, self.project_root())[1]
 
     def get_applyExe(self):
         """Apply software version."""
@@ -232,11 +232,15 @@ class Support(device.Device):
         r = go('find "{0}" -name "*.pyc" -delete ; mkdir -pv {0}'.format(self.project_root()))
         self.log.debug('Cleaned current version', r[1])
         # Lastly, restore to the selected exe version
-        r = self.do_restore(source, self.project_root())
+        
+        status, r = self.do_restore(source, self.project_root())
         self['upgradeProgress'] = 0
-        self.log.critical(
-            'Upgrade to {} finished. Please restart Misura.'.format(self['packages']))
-        return r
+        if status:
+            msg = 'Upgrade to {} finished successfully. \nPlease restart Misura to apply it!\n'.format(self['packages'])
+        else:
+            msg = 'Failed to upgrade to {}!\n'.format(self['packages'])
+        self.log.critical(msg)
+        return r+msg
 
     def get_version(self):
         """Get current misura version"""
