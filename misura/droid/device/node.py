@@ -399,3 +399,8 @@ class Node(ConfigurationInterface):
 #       if level==1:
 #           print msg
         return out, msg
+
+    def compare_option(self, *keys):
+        return option.common_proxy.scan_option(self.root, keys)
+    xmlrpc_compare_option = compare_option
+    

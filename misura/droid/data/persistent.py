@@ -300,7 +300,6 @@ class PersistentConf(option.Conf):
                 continue
             res[preset_name] = preset_desc[opt][key]
         return res
-            
-       
+        
     
     
