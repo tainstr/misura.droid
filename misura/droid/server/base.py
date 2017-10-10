@@ -55,7 +55,7 @@ class BaseServer(device.Device):
 
     def get_instruments(self):
         """Returns the list of available Instrument names"""
-        lst = [(obj['name'], obj.naturalName) for obj in self.instruments]
+        lst = [(obj['comment'] or obj['name'], obj.naturalName) for obj in self.instruments]
         self.desc.set('instruments', lst)
         return lst
 
