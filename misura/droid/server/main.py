@@ -134,7 +134,7 @@ class MainServer(BaseServer):
         self.looping.start(5)
         # Refresh lists
         self.xmlrpc_list()
-        # Update runningInstrument chooser
+        # Update and reset last/runningInstrument chooser
         opts = []
         vals = []
         for ins in self.instruments:
@@ -143,10 +143,12 @@ class MainServer(BaseServer):
         ri = self.gete('runningInstrument')
         ri['options'] = opts
         ri['values'] = vals
+        ri['current'] = ''
         self.sete('runningInstrument', ri)
         ri = self.gete('lastInstrument')
         ri['options'] = opts
         ri['values'] = vals
+        ri['current'] = ''
         self.sete('lastInstrument', ri)
         self.stream = stream.MisuraDirectory(self)
 
