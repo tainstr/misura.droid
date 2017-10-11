@@ -233,8 +233,9 @@ class Support(device.Device):
 
     def get_applyExe(self):
         """Apply software version."""
+        
         source = self.desc.getConf_dir() + 'packages/' + self['packages']
-        if not os.path.exists(source):
+        if not os.path.exists(source) or not self['packages']:
             msg = 'Software version does not exist: impossible to apply.', source
             self.log.error(msg)
             return msg
