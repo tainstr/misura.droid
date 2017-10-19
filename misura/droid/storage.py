@@ -12,6 +12,7 @@ from . import utils
 from . import parameters as params
 from misura.canon import csutil, indexer
 from . import device
+from __builtin__ import False
 
 csutil.binfunc = xmlrpc.Binary
 
@@ -270,9 +271,23 @@ class Storage(device.Device, indexer.Indexer):
             
         if free_space_in_MB < space_to_keep_in_MB:
             self.log.critical(
-                'Failed to increase tests storage. Please contact support. \nFree storage: {:.2f}MB'.format(free_space_in_MB))
+                'Failed to increase tests storage. Please contact support! \nFree storage: {:.2f}MB'.format(free_space_in_MB))
+            # Stop test if cannot free more disk space and it goes below a half
+            if self.root_isRunning:
+                status, msgs = self.do_self_test() 
+                if not status:
+                    self.root_obj['endStatus'] = msgs[-1][1]
+                    self.root_obj['isRunning'] = False
             return False
         return True
+    
+    def do_self_test(self):
+        status, msgs = super(Storage, self).do_self_test()
+        free_space_in_MB = utils.disk_free(self.path, unit=2.**20)[0]
+        if free_space_in_MB < self['keepDisk']/2:
+            msgs.append([0, 'Disk space is only {:.0f}MB'.format(free_space_in_MB)])
+            status = False
+        return status, msgs
 
     def check(self):
         """Deletes old files when disk space is running out"""
@@ -283,7 +298,7 @@ class Storage(device.Device, indexer.Indexer):
             return True
 
         entries = self.query({}, 1, 'zerotime', 'ASC', 50, 0)
-
+        r = True
         while (free_space_in_MB < space_to_keep_in_MB and len(entries) > 0):
             entry = entries.pop(0)
             r = self.remove_uid(entry[2])
@@ -295,9 +310,9 @@ class Storage(device.Device, indexer.Indexer):
 
         if free_space_in_MB < space_to_keep_in_MB:
             self.log.critical('Removing files by name...')
-            self._remove_oldest_names()
+            r = self._remove_oldest_names()
         self.test.check()
-        return True
+        return r
 
     def close(self):
         if self.desc is False:

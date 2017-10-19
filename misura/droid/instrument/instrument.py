@@ -606,7 +606,7 @@ class Instrument(device.Measurer, device.Device):
             self.log.error(
                 'Other operation in progress: cannot init instrument')
             return False
-        self.measure['endStatus'] = ''
+        self.clear_endStatus_messages()
         self.log.info(
             'Initializing instrument', self.name, 'with preset', preset)
         self.root.set('lastInstrument', self.name)

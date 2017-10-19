@@ -364,6 +364,7 @@ class Device(option.Aggregative, milang.Scriptable, Node):
                 r = obj.check()
             except:
                 self.log.error('check error', format_exc())
+                r = False
             count = r or -1
             # Increase/decrease error count
             anerr = obj['anerr'] - count
