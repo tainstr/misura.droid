@@ -71,7 +71,7 @@ conf = [
         "flags": {'period': -1}, "type": 'Script', "readLevel": 3, "writeLevel": 3,
      },
 
-    {"handle": 'endStatus', "name": "End status", "attr": ['ReadOnly'],
+    {"handle": 'endStatus', "name": "End status", "attr": ['ReadOnly', 'Results'],
         "current": '', "writeLevel": 5, "type": 'TextArea'},
 
     #------
