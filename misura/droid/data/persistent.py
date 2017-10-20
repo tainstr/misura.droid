@@ -178,7 +178,7 @@ class PersistentConf(option.Conf):
                 old = False
             else:
                 # dirshelf does not support get(key,else)
-                old = self.desc.get(handle)
+                old = option.Option(**self.desc.get(handle))
             # Preserve keepnames
             if old and (handle in self.keepnames):
                 opt = old
@@ -198,7 +198,7 @@ class PersistentConf(option.Conf):
         kept = {}
         for kn in self.keepnames:
             if self.desc.has_key(kn):
-                kept[kn] = self[kn]  # self.desc[kn]['current']
+                kept[kn] = self[kn]
 
         # FIXME: remove, done by apply_desc
         def restore():
@@ -241,6 +241,7 @@ class PersistentConf(option.Conf):
             self.conf_obj = obj
             restore()
             self.preset_cache[current_preset] = self.desc.copy()
+            print('Loaded configuration from', obj)
             return obj
         except:
             self.log.info('Unable to load new configuration: %s\n Keeping previous configuration: %s' % (

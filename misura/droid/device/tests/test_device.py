@@ -25,9 +25,7 @@ class Device(unittest.TestCase):
     @unittest.skip('')
     def test_model(self):
         device.Device(self.dp, 'pippo')
-        print self.dp.devices
         mod = self.dp.model()
-        print mod
         self.assertDictEqual(
             {'pippo': {'self': 'device'}, 'self': 'device'}, mod)
 
@@ -50,6 +48,7 @@ class Device(unittest.TestCase):
             device.Device.list_available_devices(), {'test': 'test'})
 
     def test_init_instrument(self):
+        self.assertEqual(self.dp['name'], 'dev')
         self.dp.save('default')
         self.dp['devpath'] = 'blabla'
         self.dp['name'] = 'pippo'
