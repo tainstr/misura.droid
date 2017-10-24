@@ -110,6 +110,16 @@ class Physical(Device):
         print 'Physical.close', repr(self)
         Device.close(self)
         
+    def get_readerror(self):
+        if self.readerror is None:
+            return ''
+        return 'Err.%i: %s' % tuple(self.readerror[:2])
+
+    def get_writeerror(self):
+        if self.writeerror is None:
+            return ''
+        return 'Err.%i: %s' % tuple(self.writeerror[:2])
+        
 
 
 class UDevice(Physical):

@@ -170,6 +170,8 @@ class Serial(UDevice):
         if not getattr(self, 'read', False):
             self.log.debug('UnImplemented read function')
             return 'UnImplemented'
+        self.writeerror = None
+        self.readerror = None
         self.com.write(msg)
         self.sleep()
         return self.read()
@@ -203,6 +205,7 @@ class Serial(UDevice):
 
     def write(self, msg):
         """Write msg to the serial port"""
+        self.writeerror = None
         if not self.com.isOpen():
             self.log.error('Port was not open. Reopening...')
             self.com.open()
@@ -210,6 +213,7 @@ class Serial(UDevice):
             n = self.com.write(msg)
         except serial.SerialException:
             self.connect_baudrate()
+            self.writeerror = (30, 'Cannot open serial port for write')
             raise
         # Written the whole message
         if n == len(msg):
@@ -220,7 +224,8 @@ class Serial(UDevice):
             self.sleep()
         if self.com.outWaiting():
             self._flush()
-            raise SerialTimeout('Output buffer not empty')
+            self.writeerror = (30, 'Output buffer not empty after write')
+            raise SerialTimeout(self.writeerror[1])
         return True
 
     def read(self, minlen=-1, timeout=-1, endstring=False):
@@ -228,6 +233,7 @@ class Serial(UDevice):
         if not self.com.isOpen():
             self.com.open()
             self._flush()
+            self.readerror = (30, 'Cannot open serial port for read')
             raise SerialPortNotOpen()
         r = 0
         red = ''
@@ -248,13 +254,13 @@ class Serial(UDevice):
             w = self.com.inWaiting()
             if w == 0:
                 if time() - t > timeout:
-                    self.log.debug('Serial.read: timeout', timeout, minlen, len(red))
+                    self.readerror = (30, 'Serial.read: timeout, minlen={}, red={}'.format(minlen, len(red)))
+                    self.log.debug(self.readerror[1])
                     break
                 r += 1
                 if len(red) >= minlen and r > 3:
                     break
-                #self.log.debug(
-                #    'Serial.read sleeping...', len(red),  repr(red),  minlen, self.latency)
+                #self.log.debug('Serial.read sleeping...', len(red),  repr(red),  minlen, self.latency)
                 self.sleep()
                 continue
             r = 0
