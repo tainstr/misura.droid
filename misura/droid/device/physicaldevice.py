@@ -27,6 +27,8 @@ class Physical(Device):
     available = {}
     _udev = {}
     Device.setProperties('retry', 'isConnected')
+    readerror = None
+    writeerror = None
 
     def __init__(self, parent=None, node='?p'):
         # Retrieve the  dev identifier corresponding to node devpath.
