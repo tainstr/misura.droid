@@ -128,6 +128,8 @@ class Support(device.Device):
             "attr":['ReadOnly', 'Runtime'], "type": 'Float'},
         {"handle": u'sys_cpuTicksIdle', "name": u'Idle CPU ticks',
             "attr":['ReadOnly', 'Runtime'], "type": 'Float'},
+        {"handle": u'sys_temp', "name": u'CPU Temperature',
+            "attr":['ReadOnly', 'Runtime'], "type": 'Float'},
         {"handle": u'sys_time', "name": u'Last system read',
             "attr":['ReadOnly', 'Runtime'], "type": 'Float'},
         
@@ -337,8 +339,17 @@ class Support(device.Device):
         self.vmstat()
         return self.desc['sys_cpu']
     
+    def get_sys_temp(self):
+        """Returns the maximum temperature found in all thermal zones"""
+        st, msg = go('cat /sys/class/thermal/thermal_zone*/temp')
+        if st!=0:
+            return 0
+        temps = map(float, msg.splitlines())
+        return max(temps)/1000.0
+    
     def check(self):
         self.vmstat()
+        self['sys_temp'] = self.get_sys_temp()
         return super(Support, self).check()
 
     
