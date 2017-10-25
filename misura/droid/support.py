@@ -128,10 +128,10 @@ class Support(device.Device):
             "attr":['ReadOnly', 'Runtime'], "type": 'Float'},
         {"handle": u'sys_cpuTicksIdle', "name": u'Idle CPU ticks',
             "attr":['ReadOnly', 'Runtime'], "type": 'Float'},
-        {"handle": u'sys_temp', "name": u'CPU Temperature',
-            "attr":['ReadOnly', 'Runtime'], "type": 'Float'},
-        {"handle": u'sys_time', "name": u'Last system read',
-            "attr":['ReadOnly', 'Runtime'], "type": 'Float'},
+        {"handle": u'sys_temp', "name": u'CPU Temperature', "unit": 'celsius',
+            "attr":['ReadOnly', 'History'], "type": 'Float'},
+        {"handle": u'sys_time', "name": u'Last system read', 
+            "attr":['ReadOnly', 'Runtime'], "type": 'Time'},
         
     ]
 
