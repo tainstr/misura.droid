@@ -205,7 +205,7 @@ class Support(device.Device):
     def save_last_version_info(self, prefix, package_name):
         self[prefix+'Package'] = package_name
         self[prefix+'Date'] = get_today_string()
-        self.save()     
+        self.save('default')     
 
     def get_doBackup(self):
         """Perform configuration backup."""
