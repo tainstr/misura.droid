@@ -23,8 +23,8 @@ conf = [
         "current": '', "type": 'ReadOnly',
      },
     {"handle": 'uid', "name": 'Test UID',
-        "current": '', "type": 'ReadOnly', "readLevel": 2, "parent": 'id',
-        "attr": ['Runtime'],
+        "current": '', "type": 'String', "readLevel": 2, "parent": 'id',
+        "attr": ['ReadOnly'],
      },
     {"handle": 'measureFile', "name": 'Measure File Path',
         "current": '', "readLevel": 2, "parent": 'id',
@@ -230,6 +230,7 @@ class Measure(device.Device):
     def set_preset(self, preset, *a, **k):
         """Force loading of the thermal cycle"""
         ret = device.Device.set_preset(self, preset, *a, **k)
+        self['uid'] = ''
         if preset == 'factory_default':
             return ret
         cycle = self.get_from_preset('thermalCycle', preset)
