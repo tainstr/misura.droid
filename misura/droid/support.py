@@ -56,6 +56,10 @@ class Support(device.Device):
     conf_def += [
         # Conf Backups
         {"handle": 'stopUI', "name": 'Stop embedded UI', "current": False, "type": 'Boolean',"writeLevel":5},
+        {"handle": u'logs', "name": u'Log archive',
+            "type": 'FileList', 'attr': ['Runtime']},
+        {"handle": u'doLogs', "name": u'Refresh log archive',
+            "type": 'Button', "parent": 'logs'},
         {"handle": u'backups', "name": u'Available backups',
             "type": 'FileList', 'attr': ['Runtime']},
         {"handle": u'doBackup', "name": u'New configuration backup',
@@ -153,14 +157,14 @@ class Support(device.Device):
             self.log.debug(r[1])
         return val          
 
-    excl_conf = '--exclude "sessile_betas.h5" --exclude "*/data/*" --exclude "*/backups/*" --exclude "*/packages/*" --exclude "*/exeBackups/*"'
+    excl_conf = '--exclude "sessile_betas.h5" --exclude "*/data/*" --exclude "*/support/*/*" '
     """Exclude files from configuration backup."""
 
     # excl_exe='--exclude "*.py"'
     excl_exe = '--exclude "*.h5" --exclude "*/tests/storage/*" --exclude "*/.svn/*"'
     """Exclude files from exe backups"""
 
-    def do_backup(self, source, odir, excl='', outfile=False):
+    def do_backup(self, source, odir, excl='', outfile=False, overwrite=False):
         """Generalized backup."""
         if not os.path.exists(odir):
             os.makedirs(odir)
@@ -171,6 +175,9 @@ class Support(device.Device):
         n = 1
         outfile1 = outfile
         while os.path.exists(outfile1 + '.tar.bz2'):
+            if overwrite:
+                os.remove(outfile1+ '.tar.bz2')
+                break
             outfile1 = '{}_{}'.format(outfile, n)
             n += 1
         cmd = 'tar {} -cvhf {}.tar.bz2 -C "{}" .'.format(
@@ -182,7 +189,7 @@ class Support(device.Device):
             self.log.debug('Truncating backup output', len(msg))
             msg = msg[:tar_log_limit] + '\n...[truncated]...'
         self.log.info('New backup was successful. These files were archived:', r[0], msg)
-        return msg
+        return outfile1+'.tar.bz2', msg
 
     def do_restore(self, source, dest):
         """Generalized restore. Returns status and message."""
@@ -210,7 +217,16 @@ class Support(device.Device):
     def get_doBackup(self):
         """Perform configuration backup."""
         odir = self.desc.getConf_dir() + 'backups/'
-        return self.do_backup(params.confdir, odir, self.excl_conf)
+        outfile, msg = self.do_backup(params.confdir, odir, self.excl_conf)
+        self['backups'] = os.path.basename(outfile)
+        return msg
+    
+    def get_doLogs(self):
+        """Perform logs backup."""
+        odir = self.desc.getConf_dir() + 'logs/'
+        outfile, msg = self.do_backup(params.confdir+'data/log/', odir, outfile='logs', overwrite=True)
+        self['logs'] = os.path.basename(outfile)
+        return msg
 
     def get_doRestore(self):
         """Perform configuration restore"""
@@ -223,7 +239,9 @@ class Support(device.Device):
     def get_doExeBackup(self):
         """Perform configuration backup."""
         odir = self.desc.getConf_dir() + 'exeBackups/'
-        return self.do_backup(self.project_root(), odir, self.excl_exe)
+        outfile, msg = self.do_backup(self.project_root(), odir, self.excl_exe)
+        self['exeBackups'] = os.path.basename(outfile)
+        return msg
 
     def get_doExeRestore(self):
         """Perform configuration restore"""
