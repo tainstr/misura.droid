@@ -51,7 +51,7 @@ class Support(unittest.TestCase):
 
         open(f, 'w').write('test1')
 
-        r = self.s.do_backup(p, p1)
+        of, r = self.s.do_backup(p, p1)
         # Check output
         self.assertTrue(r)
         self.assertIn('./file', r)
