@@ -59,6 +59,7 @@ class FileServer(xmlrpc.XMLRPC, indexer.FileManager):
         self.separator = '/'
         indexer.FileManager.__init__(self, store=store)
         self.xmlrpc_open_uid = self.open_uid
+        self.xmlrpc_has_child = self.has_child
         self.reserved = set()  # reserved uid registry
         
     def do_self_test(self):
@@ -68,6 +69,16 @@ class FileServer(xmlrpc.XMLRPC, indexer.FileManager):
     def do_iter_test(self):
         """Compatibility with Device"""
         return True,[]
+    
+    def has_child(self, uid):
+        if uid in self.reserved:
+            return True
+        if uid in self.tests:
+            return True
+        if self.store.searchUID(uid):
+            return True
+        return False
+        
 
     def check(self):
         """Closes timed-out files to save RAM"""
