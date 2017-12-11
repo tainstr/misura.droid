@@ -97,7 +97,9 @@ class DirShelf(FileBuffer):
         return self.has_key(key)
 
     def __delitem__(self, key):
-        shutil.rmtree(self.dir + key)
+        path = self.dir + key
+        super(DirShelf,self).close(path)
+        shutil.rmtree(path)
 
     def update(self, desc):
         for k, v in desc.iteritems():
