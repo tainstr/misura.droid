@@ -15,11 +15,13 @@ class Measurer(object):
 
     @initializeme(repeatable=True)
     def set_nSamples(self, n):
-        """Set the number of samples to search in the image. Creates a Role option for each sample."""
+        """Set the number of samples in the current measurement. 
+        Creates a Role option for each sample."""
         if self.root is not None and self.root['isRunning']:
             self.log.error(
                 'Cannot change number of samples while running acquisition.')
             return None
+        self.log.debug('Measurer.set_nSamples', n)
         if n > 16:
             n = 16
         self['running'] = 0
@@ -27,10 +29,12 @@ class Measurer(object):
             h = 'smp%i' % i
             # Don't overwrite already existing options
             if (self.desc.has_key(h)):
+                self.log.debug('Found sample role', h)
                 continue
-            print 'Creating sample', h
-            opt = {'name': 'Output Sample %i' % i, 'current': [
-                'None', 'default'], 'type': 'Role', 'parent': 'nSamples'}
+            self.log.debug('Creating sample Role', h)
+            opt = {'name': 'Output Sample %i' % i, 'handle': h,
+                   'current': ['None', 'default'], 
+                   'type': 'Role', 'parent': 'nSamples'}
             self.desc.sete(h, opt)
             self.roledev[h] = (False, False)
         # Remove unnecessary samples

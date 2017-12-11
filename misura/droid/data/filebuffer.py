@@ -158,11 +158,8 @@ class FileBuffer(object):
         for p, d in self.cache.items():
             if not p.startswith(basepath):
                 continue
-            try:
-                os.close(d)
-            except:
-                pass
             self.cache.pop(p)
+            os.close(d)
         try:
             self._lock.release()
         except:
@@ -379,7 +376,7 @@ class FileBuffer(object):
         # End byte of the last entry as reference
         else:
             t0, s, start_byte0 = self._get_idx(-1)
-            assert s > 0, repr([t0, s, start_byte0])
+            assert s > 0, 'FileProxy.write: corrupted entry during'
             high += 1
         count += 1
         # If time was not defined, get its value
