@@ -253,8 +253,9 @@ class Device(option.Aggregative, milang.Scriptable, Node):
             iotype = obj.gete(iokid)['type']
             if iotype.startswith('Role'):
                 r = obj.map_role_dev(iokid)
-                self.roledev[handle] = r
-                return r
+                if r:
+                    self.roledev[handle] = r
+                    return r
             io = obj.io(iokid)
             if not io:
                 self.log.debug('IO Not found', handle, repr(hp), cur)

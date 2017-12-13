@@ -414,7 +414,7 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
         # Get a SubDict
         if isinstance(val, dict):
             return SubDict(val, self, name)
-        # If intercepted by special any function, return here
+        # If intercepted by any special function, return here
         # They should take care about managing special types (Dict, FileList,
         # RoleIO)
         if val is not None:
@@ -433,18 +433,23 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
             self.file_list(name)
         # Resolve RoleIO
         elif typ == 'RoleIO':
-            obj = self.roledev.get(name, False)
-            # Try to remap
-            if not obj:
-                obj = self.map_role_dev(name)
-            if obj:
-                obj, pre, io = obj
-                if io and obj:
-                    val = obj[io.handle]
-                    self.desc.set(name, val)
-            else:
-                val = self.desc.get(name)
+            val = self.get_role_io(name, val)
         return val
+    
+    def get_role_io(self, name, val=None):
+        """Retrieve `name` RoleIO option from the referred option value"""
+        obj = self.roledev.get(name, False)
+        # Try to remap
+        if not obj:
+            obj = self.map_role_dev(name)
+        if obj:
+            obj, pre, io = obj
+            if io and obj:
+                val = obj[io.handle]
+                self.desc.set(name, val)
+        else:
+            val = self.desc.get(name) 
+        return val 
 
     def gete(self, opt, *a, **k):
         r = self.desc.gete(opt, *a, **k)
