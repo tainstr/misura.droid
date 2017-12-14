@@ -130,11 +130,14 @@ class Serial(UDevice):
                 sleep(.1)
         self.desc.set('baudrate', baudrate)
         
-        self.com = serial.Serial(port=self['dev'],   baudrate=baudrate,
+        try:
+            self.com = serial.Serial(port=self['dev'],   baudrate=baudrate,
                                  bytesize=self['bytesize'],  
                                  parity=self['parity'],  stopbits=self['stopbits'],
                                  timeout=self.timeout, xonxoff=self['xonxoff'], rtscts=self['rtscts'])
-    
+        except:
+            self.log.error('Error opening serial port:', self['dev'], format_exc())
+            return False
                     
         if not self.com.isOpen():
             self.log.debug('Unable to open serial port')
