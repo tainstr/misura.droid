@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from registry import DevicePathRegistry,  get_registry,  delete_registry
 
-from control import Control
+from control import Control, Calibrator
 from configuration import ConfigurationInterface, fill_implicit_args
 from node import Node
 from device import Device, share

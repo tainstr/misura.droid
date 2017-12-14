@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """Generic option Control object"""
-
+import numpy as np
 
 class Control(object):
 
@@ -42,3 +42,61 @@ class Control(object):
 
     def setFlag(self, flag, val):
         return False
+
+"""
+# Example Calibrator option structure:
+
+    {"handle": 'T',
+     "name": 'Sample Temperature',
+        "type": 'Float', 'unit': 'celsius',
+        "attr": ['History', 'ReadOnly'],
+     },
+    {"handle": 'rawT',
+     "name": 'Raw Temperature',
+        "parent": 'T',
+        "type": 'Float', 'unit': 'celsius',
+        "attr": ['History', 'ReadOnly'],
+     },
+
+    {"handle": 'calibrationT',    "name": 'Sample Calibration',
+     "current": [[('Measured', 'Float'),
+                  ('Theoretical', 'Float'),
+                  ],
+                 [20,20]
+                 ],
+        "unit": ['celsius', 'celsius'],
+        "type": 'Table',
+        "writeLevel": 4,
+     },
+"""
+
+class Calibrator(Control):
+    """Generic calibration control.
+    The host Device must define also rawOption (Float) 
+    and calibrationOption (2 col Floats table, Measured, Theoretical)""" 
+    
+    _calibration_func = False
+    @property
+    def calibration_func(self):
+        """Cache a polynomial calibration function"""
+        cal = self.parent['calibration'+self.handle]
+        if len(cal)<=3:
+            return False
+        if not self._calibration_func:
+            m,t = [],[]
+            map(lambda v: (m.append(v[0]), t.append(v[1])), cal[1:])
+            self.parent.log.debug('Reacreating calibration_func', self.handle, m, t)
+            factors = np.polyfit(m, t, deg = 3)
+            self._calibration_func = np.poly1d(factors)
+        return self._calibration_func
+    
+    def calibrated(self, nval):
+        if not self.calibration_func:
+            return nval
+        # Store in rawT dataset
+        self.parent['raw'+self.handle] = nval
+        return float(self._calibration_func(nval))       
+
+
+        
+    
