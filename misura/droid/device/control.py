@@ -79,23 +79,62 @@ class Calibrator(Control):
     @property
     def calibration_func(self):
         """Cache a polynomial calibration function"""
-        cal = self.parent['calibration'+self.handle]
-        if len(cal)<=3:
+        # Return if already defined
+        if self._calibration_func:
+            return self._calibration_func
+        # Disabled
+        if self._calibration_func is None:
             return False
-        if not self._calibration_func:
-            m,t = [],[]
-            map(lambda v: (m.append(v[0]), t.append(v[1])), cal[1:])
-            self.parent.log.debug('Reacreating calibration_func', self.handle, m, t)
-            factors = np.polyfit(m, t, deg = 3)
-            self._calibration_func = np.poly1d(factors)
+        cal = self.parent['calibration'+self.handle]
+        # Disable if not enough points
+        if len(cal)<=3:
+            self._calibration_func = None
+            return False
+        # Create new function
+        m,t = [],[]
+        map(lambda v: (m.append(v[0]), t.append(v[1])), cal[1:])
+        self.parent.log.debug('Reacreating calibration_func', self.handle, m, t)
+        factors = np.polyfit(m, t, deg = 3)
+        self._calibration_func = np.poly1d(factors)
         return self._calibration_func
     
+    _inverse_func = False
+    @property
+    def inverse_func(self):
+        """Cache the inverse of the calibration function"""
+        # Return if already defined
+        if self._inverse_func:
+            return self._inverse_func
+        # Disabled
+        if self._inverse_func is None:
+            return False
+        cal = self.parent['calibration'+self.handle]
+        # Disable if not enough points
+        if len(cal)<=3:
+            self._inverse_func = None
+            return False
+        # Create new function
+        m,t = [],[]
+        map(lambda v: (m.append(v[0]), t.append(v[1])), cal[1:])
+        self.parent.log.debug('Reacreating inverse_func', self.handle, m, t)
+        factors = np.polyfit(t, m, deg = 3)
+        self._inverse_func = np.poly1d(factors)
+        return self._inverse_func
+    
     def calibrated(self, nval):
+        """Return theoretical value from measured value `nval`"""
         if not self.calibration_func:
             return nval
         # Store in rawT dataset
         self.parent['raw'+self.handle] = nval
-        return float(self._calibration_func(nval))       
+        return float(self._calibration_func(nval))
+    
+    def inverse(self, val): 
+        """Return the required measured value in order 
+        to obtain a calibrated value `val`"""
+        if not self.inverse_func:
+            return val
+        return float(self._inverse_func(val))       
 
 
         
