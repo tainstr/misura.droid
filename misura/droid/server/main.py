@@ -85,7 +85,7 @@ class MainServer(BaseServer):
                  plug=False, manager=False):
         if manager is False:
             manager = share.manager
-        print 'MainServer with manager', repr(manager)
+        print('MainServer with manager', repr(manager))
         BaseServer.__init__(self, manager, confdir, datadir)
         self.time_delta = 0
 #        share.Log.setStatus(self.desc)
@@ -127,7 +127,8 @@ class MainServer(BaseServer):
                 else:
                     func(self)
             while initializing.value > 0:
-                print 'WAITING THREADED INITIALIZATION', initializing.value, group
+                print('WAITING THREADED INITIALIZATION',
+                      initializing.value, group)
                 sleep(1)
         # Start the auto-check looping function
         self.looping = task.LoopingCall(self.threaded_check)
@@ -151,6 +152,20 @@ class MainServer(BaseServer):
         ri['current'] = ''
         self.sete('lastInstrument', ri)
         self.stream = stream.MisuraDirectory(self)
+        if self['eq_sn'] == 'VirtualMisuraServer':
+            self.enable_simulation_server()
+
+    def enable_simulation_server(self):
+        self.log.info('Enabling simulation server')
+        from misura.tests import preconf as pc
+        pc.full_server(self)
+        pc._full_hsm(1, self)
+        pc._absolute_flex(self)
+        pc._full_horizontal(self)
+        self.log.info('Enabled simulation server')
+        return 'done'
+
+    xmlrpc_enable_simulation_server = enable_simulation_server
 
     def set_endStatus(self, val):
         """Concatenate general endStatus messages form all devices"""

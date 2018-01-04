@@ -177,7 +177,7 @@ class DeviceServer(Device):
                 self[eo] = self[eo]
             cls.list_available_devices()
             print self.class_name + '::SCANNING::', cls, cls.available
-            free = registry.check_available(cls.available)
+            free = registry.check_available(cls.available) 
             print self.class_name + '::SCANNING::', free
             # Continue scanning until there are no more availed or non-failed
             # nodes
