@@ -259,6 +259,11 @@ class Support(device.Device):
             msg = 'Software version does not exist: impossible to apply.', source
             self.log.error(msg)
             return msg
+        if not source.endswith('.tar'):
+            msg = 'Selected upgrade package is invalid. Removing.'
+            self.log.error(msg)
+            os.remove(source)
+            return msg
         # Prepare number of steps
         self.setattr('upgradeProgress', 'max', 4)
         # Tell the main server which operation is in progress
