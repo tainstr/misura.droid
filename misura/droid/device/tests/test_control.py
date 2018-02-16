@@ -16,6 +16,8 @@ def setUpModule():
     print 'Starting', __name__
     
 cal = [[20,120],[100,200],[300,400],[400,500]]
+cal1 = [[c[1],c[0]] for c in cal]
+cal2 = [[20,20], [538, 532], [1076, 1064], [1177, 1165]]
 
 class TestCalibrator(unittest.TestCase):
     
@@ -44,6 +46,7 @@ class TestCalibrator(unittest.TestCase):
         n = c.calibrated(100)
         self.assertFalse(not c.calibration_func)
         self.assertAlmostEqual(n, 200)
+        self.assertAlmostEqual(c.calibrated(50), 150)
         self.assertAlmostEqual(c.calibrated(150), 250)
         
     def test_inverse(self):
@@ -51,7 +54,18 @@ class TestCalibrator(unittest.TestCase):
         self.d['calibrationT']=[self.d['calibrationT'][0]]+cal
         self.assertAlmostEqual(c.inverse(100), 0)
         self.assertAlmostEqual(c.inverse(150), 50)     
+        self.assertAlmostEqual(c.inverse(250), 150)
+        self.d['calibrationT']=[self.d['calibrationT'][0]]+cal1
+        c._inverse_func=0
+        self.assertAlmostEqual(c.inverse(20), 120)
+        self.assertAlmostEqual(c.inverse(50), 150) 
+        self.assertAlmostEqual(c.inverse(150), 250)
         
+        self.d['calibrationT']=[self.d['calibrationT'][0]]+cal2
+        c._inverse_func=0
+        c._calibration_func=0
+        v=c.calibrated(200)
+        self.assertAlmostEqual(c.inverse(v),200, delta=2e-2)
         
     
 if __name__ == "__main__":

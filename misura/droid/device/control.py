@@ -127,14 +127,14 @@ class Calibrator(Control):
             return nval
         # Store in rawT dataset
         self.parent['raw'+self.handle] = nval
-        return float(self._calibration_func(nval))
+        return self._calibration_func(nval)
     
     def inverse(self, val): 
         """Return the required measured value in order 
         to obtain a calibrated value `val`"""
         if not self.inverse_func:
             return val
-        return float(self._inverse_func(val))       
+        return self._inverse_func(val)       
 
 
         

@@ -228,7 +228,7 @@ class ProcessProxy(object):
         self._kwargs = kwargs
         self._process.daemon = True
         self._process.start()
-        sleep(1)        
+        sleep(1)
         if not os.path.exists(self._pid_path):
             self._log.debug('ProcessProxy unable to start!!!', self._cls.__name__, self._args, self._kwargs)
             raise RuntimeError('ProcessProxy cannot start!!!')
