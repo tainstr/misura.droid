@@ -85,16 +85,22 @@ class Calibrator(Control):
         # Disabled
         if self._calibration_func is None:
             return False
-        cal = self.parent['calibration'+self.handle]
+        cal = self.parent['calibration'+self.handle][1:]
+        
+        if self.parent.has_key('calibrationDeg'+self.handle):
+            deg = self.parent['calibrationDeg'+self.handle]
+        else:
+            deg = min(3, len(cal)-2)
+        
         # Disable if not enough points
-        if len(cal)<=3:
+        if len(cal)-2<deg or deg<=0:
             self._calibration_func = None
             return False
         # Create new function
         m,t = [],[]
-        map(lambda v: (m.append(v[0]), t.append(v[1])), cal[1:])
-        self.parent.log.debug('Reacreating calibration_func', self.handle, m, t)
-        factors = np.polyfit(m, t, deg = 3)
+        map(lambda v: (m.append(v[0]), t.append(v[1])), cal)
+        self.parent.log.debug('Reacreating calibration_func', self.handle, deg, m, t)
+        factors = np.polyfit(m, t, deg = deg)
         self._calibration_func = np.poly1d(factors)
         return self._calibration_func
     
@@ -108,16 +114,22 @@ class Calibrator(Control):
         # Disabled
         if self._inverse_func is None:
             return False
-        cal = self.parent['calibration'+self.handle]
+        cal = self.parent['calibration'+self.handle][1:]
+        
+        if self.parent.has_key('calibrationDeg'+self.handle):
+            deg = self.parent['calibrationDeg'+self.handle]
+        else:
+            deg = min(3, len(cal)-2)
+        
         # Disable if not enough points
-        if len(cal)<=3:
+        if len(cal)-2<deg or deg<=0:
             self._inverse_func = None
             return False
         # Create new function
         m,t = [],[]
-        map(lambda v: (m.append(v[0]), t.append(v[1])), cal[1:])
-        self.parent.log.debug('Reacreating inverse_func', self.handle, m, t)
-        factors = np.polyfit(t, m, deg = 3)
+        map(lambda v: (m.append(v[0]), t.append(v[1])), cal)
+        self.parent.log.debug('Reacreating inverse_func', self.handle, deg, m, t)
+        factors = np.polyfit(t, m, deg = deg)
         self._inverse_func = np.poly1d(factors)
         return self._inverse_func
     
