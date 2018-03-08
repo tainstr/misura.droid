@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
 """Filesystem-level CircularBuffer implementation"""
 import os
-import fcntl
-from fcntl import LOCK_EX, LOCK_UN, F_WRLCK, LOCK_SH
+
+if os.name=='nt':
+    isWindows = True
+    import msvcrt
+    from msvcrt import LK_NBLOCK, LK_NBRLCK, LK_UNLCK
+    LOCK_EX, LOCK_SH, LOCK_UN = LK_NBLOCK, LK_NBRLCK, LK_UNLCK
+else:
+    isWindows = False
+    import fcntl
+    from fcntl import LOCK_EX, LOCK_SH, LOCK_UN
 import struct
 import mmap
 import collections
@@ -18,8 +26,12 @@ from misura.canon import csutil
 
 from misura.droid import utils
 
-flk = struct.pack('hhqql', F_WRLCK, 0, 0, 0, 0)
-
+def lockf(fd, mode):
+    """Unix-compatible call to msvcrt file locking"""
+    return msvcrt.locking(fd, mode, 1)
+    
+if not isWindows: 
+    lockf = fcntl.lockf
 
 def exclusive(func, lock=LOCK_EX):
     """Decorator for FileBuffer fopen/fclose management"""
@@ -46,7 +58,7 @@ def clean_cache(obj):
     for i in range(0, len(obj.cache) - obj.cache_len):
         # remove and close the first inserted item
         oldp, oldfd = obj.cache.popitem(False)
-        fcntl.lockf(oldfd, LOCK_UN)
+        lockf(oldfd, LOCK_UN)
         os.close(oldfd)
     return i
 
@@ -106,7 +118,7 @@ class FileBuffer(object):
         if fd <= 0:
             return False
         # Lock must precede mmap
-        fcntl.lockf(fd, lock)
+        lockf(fd, lock)
         try:
             # Must re-map each time
             self.mm = mmap.mmap(fd, length=0)
@@ -137,7 +149,7 @@ class FileBuffer(object):
         # Open the file descriptor
         fd = os.open(path, flags)
         # Lock must precede mmap
-        fcntl.lockf(fd, lock)
+        lockf(fd, lock)
         # Create the memory map
         self.mm = mmap.mmap(fd, length=0)
         self.fd = fd
@@ -174,7 +186,7 @@ class FileBuffer(object):
             self.mm.flush()  # needed to actually sync
             self.mm = False
         if self.fd >= 0:
-            fcntl.lockf(self.fd, fcntl.LOCK_UN)
+            lockf(self.fd, LOCK_UN)
             if self.cache_len <= 0:
                 os.close(self.fd)
                 self.fd = -1

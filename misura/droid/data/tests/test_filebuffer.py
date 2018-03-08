@@ -5,7 +5,7 @@ import unittest
 import shutil
 import os
 import fcntl
-from fcntl import flock, LOCK_SH, LOCK_EX, LOCK_NB
+from fcntl import LOCK_EX
 from time import time, sleep
 import multiprocessing
 

@@ -16,6 +16,7 @@ def new_name(base):
         N += 1
     return str(N)
 
+sep = '\\' if os.name=='nt' else '/'
 
 class DirShelf(FileBuffer):
 
@@ -28,17 +29,17 @@ class DirShelf(FileBuffer):
         """`basedir`: RAM directory for sharing object pickles and current values"""
         super(DirShelf, self).__init__(private_cache=private_cache)
         self.idx_entries = 100
-        if not basedir.endswith('/'):
-            basedir += '/'
+        if not basedir.endswith(sep):
+            basedir += sep
         self.basedir = basedir
         if not os.path.exists(self.basedir):
             print 'DirShelf: creating basedir', self.basedir
             os.makedirs(self.basedir)
         if viewdir:
-            if not viewdir.endswith('/'):
-                viewdir += '/'
+            if not viewdir.endswith(sep):
+                viewdir += sep
         else:
-            viewdir = new_name(self.basedir) + '/'
+            viewdir = new_name(self.basedir) + sep
         self.viewdir = viewdir
         self.dir = self.basedir + self.viewdir
         self.protocol = protocol
@@ -65,7 +66,7 @@ class DirShelf(FileBuffer):
         """Object path"""
         if key == '':
             return self.dir + 'self'
-        return self.dir + str(key) + '/' + 'self'
+        return self.dir + str(key) + sep + 'self'
 
     def set(self, key, val, t=-1, newmeta=True):
         if newmeta:
