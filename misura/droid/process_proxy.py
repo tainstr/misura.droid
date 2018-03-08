@@ -16,6 +16,12 @@ import utils
 
 sep = '#$#$#$****&&%$#(*⁽&%#--#--#--#'
 
+isWindows = os.name=='nt'
+base_path = '/tmp/misura'
+dsep = '/'
+if isWindows:
+    base_path = 'C:\Windows\Temp\misura'
+    dsep = '\\'
 
 class ProcessProxy(object):
     _protect = set([])
@@ -57,7 +63,7 @@ class ProcessProxy(object):
         self._log_path = log_path
         self._log_owner = owner
         self._log.log_path = log_path
-        self._log.owner = owner+'pp'+self._cls.__name__+'/'
+        self._log.owner = owner+'pp'+self._cls.__name__+dsep
         self._log.debug('Set ProcessProxy logging to', log_path, owner)
 
     def _set_logging(self, log_path,  owner='ProcessProxy'):
@@ -113,17 +119,32 @@ class ProcessProxy(object):
 
     def _client_socket(self, name):
         path = os.path.join(self._path, name)
-        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(path)
+        if isWindows:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(self._timeout)
+            s.setblocking(1)
+            port = int(open(path, 'r').read())
+            s.connect(('localhost', port))
+        else:
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            s.connect(path)
         return s
 
     def _server_socket(self, name, listen=1, timeout=5):
         if not name in self._sockets:
-            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             path = os.path.join(self._path, name)
             if os.path.exists(path):
                 os.remove(path)
-            s.bind(path)
+            if isWindows:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.setblocking(1)
+                s.bind(('localhost', 0))
+                port = s.getsockname()[1]
+                # Save current effective port in the socket file path
+                open(path, 'w').write(str(port))
+            else:
+                s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                s.bind(path)
             s.settimeout(timeout)
             s.listen(listen)
             self._sockets[name] = s
