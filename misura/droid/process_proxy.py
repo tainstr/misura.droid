@@ -20,7 +20,6 @@ isWindows = os.name=='nt'
 base_path = '/tmp/misura'
 dsep = '/'
 if isWindows:
-    base_path = 'C:\Windows\Temp\misura'
     dsep = '\\'
 
 class ProcessProxy(object):

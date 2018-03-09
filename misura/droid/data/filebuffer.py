@@ -5,8 +5,7 @@ import os
 if os.name=='nt':
     isWindows = True
     import msvcrt
-    from msvcrt import LK_NBLOCK, LK_NBRLCK, LK_UNLCK
-    LOCK_EX, LOCK_SH, LOCK_UN = LK_NBLOCK, LK_NBRLCK, LK_UNLCK
+    LOCK_EX, LOCK_SH, LOCK_UN = msvcrt.LK_NBLCK, msvcrt.LK_NBRLCK, msvcrt.LK_UNLCK
 else:
     isWindows = False
     import fcntl
@@ -28,6 +27,7 @@ from misura.droid import utils
 
 def lockf(fd, mode):
     """Unix-compatible call to msvcrt file locking"""
+    os.lseek(fd, 0, 0)
     return msvcrt.locking(fd, mode, 1)
     
 if not isWindows: 
@@ -145,7 +145,9 @@ class FileBuffer(object):
                 self._lock.release()
                 raise exceptions.KeyError(
                     'Non-existent path for reading: ' + path)
-        flags = os.O_RDWR | os.O_SYNC
+        flags = os.O_RDWR 
+        if not isWindows:
+            flags |= os.O_SYNC
         # Open the file descriptor
         fd = os.open(path, flags)
         # Lock must precede mmap

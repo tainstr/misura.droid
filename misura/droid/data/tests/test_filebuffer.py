@@ -4,14 +4,14 @@
 import unittest
 import shutil
 import os
-import fcntl
-from fcntl import LOCK_EX
+
 from time import time, sleep
 import multiprocessing
 
 #from misura import utils_testing as ut
 
 from misura.droid.data import filebuffer
+
 
 from misura.droid import utils
 
@@ -36,7 +36,7 @@ class FileBuffer(unittest.TestCase):
         if os.path.exists(p):
             os.remove(p)
 # 		self.assertFalse(os.path.exists(p))
-        mm, fd = fb.fopen(p, LOCK_EX)
+        mm, fd = fb.fopen(p, filebuffer.LOCK_EX)
         self.assertEqual(mm, fb.mm)
         self.assertEqual(fd, fb.fd)
         self.assertTrue(os.path.exists(p))
