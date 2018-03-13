@@ -12,6 +12,8 @@ from misura.droid.version import __version__
 
 def get_lib_info():
     """Find all libraries loaded in current process and their real shared object name with version"""
+    if params.isWindows:
+        return 'Unsupported on Windows platforms'
     r = go('pmap -p {}'.format(os.getpid()))
     paths = set([])
     out = ''
@@ -32,6 +34,8 @@ def get_lib_info():
     return out
 
 def parse_vmstat():
+    if params.isWindows:
+        return {}
     vm = {}
     r = go('vmstat -s -S M')[1]
     r=r.replace('  ','').replace('  ','').replace('\n ','\n')
@@ -166,6 +170,8 @@ class Support(device.Device):
 
     def do_backup(self, source, odir, excl='', outfile=False, overwrite=False):
         """Generalized backup."""
+        if params.isWindows:
+            return 'unsupported', 'Unsupported'
         if not os.path.exists(odir):
             os.makedirs(odir)
         # TODO: migrate to tarfile implementation providing progress updates
@@ -193,6 +199,8 @@ class Support(device.Device):
 
     def do_restore(self, source, dest):
         """Generalized restore. Returns status and message."""
+        if params.isWindows:
+            return False, 'Unsupported'
         if not os.path.exists(source):
             self.log.error('Selected backup file does not exist:', source)
             return False, 'Selected backup does not exist: ' + source
@@ -253,7 +261,8 @@ class Support(device.Device):
 
     def get_applyExe(self):
         """Apply software version."""
-        
+        if params.isWindows:
+            return 'Unsupported'
         source = self.desc.getConf_dir() + 'packages/' + self['packages']
         if not os.path.exists(source) or not self['packages']:
             msg = 'Software version does not exist: impossible to apply.', source
@@ -300,6 +309,8 @@ class Support(device.Device):
 
     def get_env(self):
         """Get environment variables"""
+        if params.isWindows:
+            return 'unsupported'
         r = go('env')
         return r[1]
 
@@ -309,19 +320,25 @@ class Support(device.Device):
         return 'NotImplemented'
 
     def get_reboot(self):
+        if params.isWindows:
+            return 'unsupported'
         r = go('sudo reboot')
         self.log.warning('Reboot requested. Result:', r)
         return r
 
     def get_halt(self):
+        if params.isWindows:
+            return 'unsupported'
         r = go('sudo halt -p')
         self.log.warning('Shutdown requested. Result:', r)
         return r
 
     def project_root(self):
-        return "/".join(params.mdir.split("/")[:-4])
+        return params.sep.join(params.mdir.split(params.sep)[:-4])
     
     def vmstat(self):
+        if params.isWindows:
+            return {}
         vm=parse_vmstat()
         t=time()
         self['sys_ram'] = vm['M total memory']
@@ -364,6 +381,8 @@ class Support(device.Device):
     
     def get_sys_temp(self):
         """Returns the maximum temperature found in all thermal zones"""
+        if params.isWindows:
+            return 0
         st, msg = go('cat /sys/class/thermal/thermal_zone*/temp')
         if st!=0:
             return 0
