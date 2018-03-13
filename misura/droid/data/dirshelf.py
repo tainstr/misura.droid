@@ -72,7 +72,7 @@ class DirShelf(FileBuffer):
         if newmeta:
             val = deepcopy(val)
             cur = val.pop('current')
-            assert val['handle'] == key
+            assert val['handle'] == key, 'Handle mismatch: {} {}'.format(key, val['handle'])
             newmeta = val
         else:
             cur = val

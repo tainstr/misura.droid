@@ -222,49 +222,46 @@ class FileBuffer(unittest.TestCase):
         self.assertEqual(fb.high, 0)
         self.assertEqual(fb.count, 10)
         
+    def stress_write(self, pid, dat='a', dt=10):
+        i = 0
+        t0=time()
+        while time()-t0<dt:
+            self.fb.write(p+str(pid), dat)
+            #self.fb.get_idx(p+str(pid), 0)
+            i+=1
+        v = 1.*i/dt
+        print 'W', pid, v
+        self.w_tot.value += v
+            
+        
+    def stress_read(self, pid, dt=10):
+        i = 0
+        t0 = time()
+        while time()-t0<dt:
+            self.fb.get_idx(p+str(pid), 0)
+            i += 1
+        v = 1.*i/dt
+        print 'R', pid, v
+        self.r_tot.value += v
+    
     def test_performance(self):
         self.fb.idx_entries = 2
         data = 'a'*int(1e3)
-        w_tot = multiprocessing.Value('f')
-        w_tot.value = 0
-        r_tot = multiprocessing.Value('f')
-        r_tot.value = 0
-        #from misura.canon.csutil import profile
-        #@profile
-        def stress_write(pid, dat=data, dt=10):
-            i = 0
-            t0=time()
-            while time()-t0<dt:
-                self.fb.write(p+str(pid), dat)
-                #self.fb.get_idx(p+str(pid), 0)
-                i+=1
-            v = 1.*i/dt
-            print 'W', pid, v
-            w_tot.value += v
-            
-            
-        def stress_read(pid, dt=10):
-            i = 0
-            t0 = time()
-            while time()-t0<dt:
-                self.fb.get_idx(p+str(pid), 0)
-                i += 1
-            v = 1.*i/dt
-            print 'R', pid, v
-            r_tot.value += v
-            
-        
+        self.w_tot = multiprocessing.Value('f')
+        self.w_tot.value = 0
+        self.r_tot = multiprocessing.Value('f')
+        self.r_tot.value = 0
             
         w_concurrency = 2
         r_concurrency = 2
         w = []
         r = []
         for i in range(w_concurrency):
-            w.append(multiprocessing.Process(target=stress_write, args=(i, )))      
+            w.append(multiprocessing.Process(target=self.stress_write, args=(i, data)))      
             w[-1].start()
             sleep(0.1)
             for j in range(r_concurrency):
-                r.append( multiprocessing.Process(target=stress_read, args=(i, )))
+                r.append( multiprocessing.Process(target=self.stress_read, args=(i, )))
                 r[-1].start()
                 
         # Stop all
@@ -272,7 +269,7 @@ class FileBuffer(unittest.TestCase):
         map(j, w)
         map(j, r)
             
-        print 'TOT', w_tot.value+r_tot.value, w_tot.value, r_tot.value
+        print 'TOT', self.w_tot.value+self.r_tot.value, self.w_tot.value, self.r_tot.value
         
 
 

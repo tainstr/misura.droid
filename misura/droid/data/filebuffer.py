@@ -27,11 +27,15 @@ from misura.droid import utils
 
 def lockf(fd, mode):
     """Unix-compatible call to msvcrt file locking"""
+    if not isWindows: 
+        return fcntl.lockf(fd, mode)
     os.lseek(fd, 0, 0)
-    return msvcrt.locking(fd, mode, 1)
+    try:
+        return msvcrt.locking(fd, mode, 1)
+    except:
+        return False
     
-if not isWindows: 
-    lockf = fcntl.lockf
+
 
 def exclusive(func, lock=LOCK_EX):
     """Decorator for FileBuffer fopen/fclose management"""
@@ -57,9 +61,11 @@ def clean_cache(obj):
     i = 0
     for i in range(0, len(obj.cache) - obj.cache_len):
         # remove and close the first inserted item
-        oldp, oldfd = obj.cache.popitem(False)
-        lockf(oldfd, LOCK_UN)
+        oldp, (oldfd, oldlfd) = obj.cache.popitem(False)
+        lockf(oldlfd, LOCK_UN)
         os.close(oldfd)
+        if oldfd!=oldlfd:
+            os.close(oldlfd)
     return i
 
 def shared(func):
@@ -82,7 +88,7 @@ class FileBuffer(object):
     invalid = '#'
     empty_entry = invalid + ' ' * (idx_len - 2) + '\n'
     max_size = 2 * 10**6
-    cache = collections.OrderedDict()  # {path: (mmap,fileno)}
+    cache = collections.OrderedDict()  # {path: (mmap,(fileno, lock_fileno))}
     # maximum number of opened file descriptors, per PROCESS (class attribute!)
     cache_len = 500
     start_meta_position = idx_len * (idx_entries + 1)
@@ -113,18 +119,24 @@ class FileBuffer(object):
         fo.write(self.empty_entry * self.idx_entries)
         fo.write(' ' * self.meta_len)
         fo.close()
-
-    def remap(self, fd, lock):
+        
+        if isWindows:
+            lo = open(path+'.lk', 'wb')
+            lo.write(' ')
+            lo.close()
+            
+    def remap(self, fd, lfd, lock):
         if fd <= 0:
             return False
         # Lock must precede mmap
-        lockf(fd, lock)
+        lockf(lfd, lock)
         try:
             # Must re-map each time
             self.mm = mmap.mmap(fd, length=0)
         except:
             return False
         self.fd = fd
+        self.lfd = lfd
         self.info = self._get_info()
         self.mm.seek(0)
         return True
@@ -133,12 +145,15 @@ class FileBuffer(object):
         """Open a file in path, handling the locking"""
         self._lock.acquire()
         self.path = path
-        fd = self.cache.get(path, -1)
-        if self.remap(fd, lock):
+        fd, lfd = self.cache.get(path, (-1,-1))
+        if self.remap(fd, lfd, lock):
             return self.mm, self.fd
         # And initialize the indexed file, if exclusive lock was required
         # (writing)
-        if not os.path.exists(path):
+        ex = os.path.exists(path)
+        if isWindows:
+            ex *= os.path.exists(path+'.lk')
+        if not ex:
             if lock == LOCK_EX or self.cache_len == 0:
                 self.init(path)
             else:
@@ -149,16 +164,21 @@ class FileBuffer(object):
         if not isWindows:
             flags |= os.O_SYNC
         # Open the file descriptor
-        fd = os.open(path, flags)
+        self.fd = os.open(path, flags)
+        
+        if isWindows:
+            self.lfd = os.open(path+'.lk', flags)
+        else:
+            self.lfd = self.fd
         # Lock must precede mmap
-        lockf(fd, lock)
+        lockf(self.lfd, lock)
         # Create the memory map
-        self.mm = mmap.mmap(fd, length=0)
-        self.fd = fd
+        self.mm = mmap.mmap(self.fd, length=0)
+
         # Manage caching
         if self.cache_len > 0:
             clean_cache(self)
-            self.cache[path] = fd
+            self.cache[path] = (self.fd, self.lfd)
 
         self.info = self._get_info()
         return self.mm, self.fd
@@ -169,11 +189,14 @@ class FileBuffer(object):
         return clean_cache(cls)
 
     def close(self, basepath=''):
-        for p, d in self.cache.items():
+        for p in self.cache.keys():
             if not p.startswith(basepath):
                 continue
-            self.cache.pop(p)
-            os.close(d)
+            (fd,lfd) = self.cache.pop(p)
+            lockf(lfd, LOCK_UN)
+            os.close(fd)
+            if lfd!=fd:
+                os.close(lfd)
         try:
             self._lock.release()
         except:
@@ -188,10 +211,13 @@ class FileBuffer(object):
             self.mm.flush()  # needed to actually sync
             self.mm = False
         if self.fd >= 0:
-            lockf(self.fd, LOCK_UN)
+            lockf(self.lfd, LOCK_UN)
             if self.cache_len <= 0:
                 os.close(self.fd)
+                if self.lfd!=self.fd:
+                    os.close(self.lfd)
                 self.fd = -1
+                self.lfd = -1
         try:
             self._lock.release()
         except:
@@ -426,8 +452,14 @@ class FileBuffer(object):
         self.fclose()
         # Remove from cache and FS
         if self.cache_len > 0:
-            del self.cache[path]
+            fd, lfd = self.cache.pop(path)
+            lockf(lfd, LOCK_UN)
+            os.close(fd)
+            if lfd!=fd:
+                os.close(lfd)
         os.remove(path)
+        if isWindows:
+            os.remove(path+'.lk')
         # This will re-init a blank file with the latest values.
         self.write(path, val, t, newmeta=meta)
         return True
