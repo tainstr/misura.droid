@@ -113,15 +113,13 @@ class Node(ConfigurationInterface):
         self.naturalName = self.desc.get('devpath')
         self.attach(self.parent())
         # Set the persistent folder
-        conf_dir = '%s%s' % (self.main_confdir, self['fullpath'].lstrip('/'))
+        conf_dir = '%s%s' % (self.main_confdir, self['fullpath'].lstrip(params.sep))
         self.desc.setConf_dir(conf_dir)
         # Create full directory tree
         bdir = ''
-        for cdir in conf_dir.split('/'):
-            bdir += '/' + cdir
-            if not os.path.exists(bdir):
-                os.mkdir(bdir)
-
+        if not os.path.exists(conf_dir):
+            os.makedirs(conf_dir)
+            
     def attach(self, parent, idx=-1):
         """Attach the device to `parent` node"""
         self._parent = parent

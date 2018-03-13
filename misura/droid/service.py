@@ -23,6 +23,7 @@ from misura.droid import share
 from misura.droid import utils
 from misura.droid.server import MainServer, MisuraDirectory, cert_dir
 
+
 # Extract certificates from pkg_resources
 # TODO: alternatively import from config dir
 ssl_private_key = pkg_resources.resource_filename(
@@ -186,8 +187,8 @@ def getOpts():
             val = int(val)
         if opt in ['-c', '-d', '-m'] and val is not False:
             val = val.strip('"')
-            if not val.endswith('/'):
-                val += '/'
+            if not val.endswith(params.sep):
+                val += params.sep
             if not os.path.exists(val):
                 print "Non-existent path configured for %s: %s" % (opt, val)
 #               val=False

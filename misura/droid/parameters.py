@@ -6,6 +6,9 @@ import sys
 from commands import getoutput as go
 import pkg_resources
 
+isWindows = os.name == 'nt'
+sep = '\\' if isWindows else '/'
+rootdir = 'C:\\' if isWindows else '/' 
 version = 0  # Misura version
 ut=False
 # LOGIN
@@ -39,24 +42,28 @@ def determine_path(root=__file__):
         print "There is no __file__ variable. Please contact the author."
         sys.exit()
 # PATHS
-home = os.path.expanduser("~") + '/'
+home = os.path.expanduser("~") + sep
 mdir = determine_path()  # Executable path
-mdir += '/'
-misuraServerExe = mdir + 'MisuraServer.pyc'
-baseStorageDir = home + 'storage/'  # Config+Data
-baseTmpDir = '/tmp/misura/'
-# {}/'.format(getpass.getuser())            # RAM filesystem for performance
-baseRunDir = '/dev/shm/misura/'
-testdir = mdir + 'tests/'  # Test automatizzati
+mdir += sep
+misuraServerExe = os.path.join(mdir, 'MisuraServer.pyc')
+baseStorageDir = os.path.join(home, 'storage', '')  # Config+Data
+baseTmpDir = os.path.join(rootdir, 'tmp', 'misura', '')
+baseRunDir = os.path.join(rootdir, 'dev','shm','misura','')
+testdir = os.path.join(mdir, 'tests','')  # Test automatizzati
 
 
 # Detect hardware mac address of this machine
-HW = go("ifconfig | grep 'HW' | awk '{ print $5}'|head -n1")
-# Check if netbooted - setup default dir in /opt/machines
-NETBOOTED = go('df -h|grep "/$"|grep ":/var/deploy" >/dev/null; echo $?')
-if NETBOOTED == '0':
-    NETBOOTED = True
-    baseStorageDir = "/opt/machines/" + HW + '/'
+if not isWindows:
+    HW = go("ifconfig | grep 'HW' | awk '{ print $5}'|head -n1")
+    # Check if netbooted - setup default dir in /opt/machines
+    NETBOOTED = go('df -h|grep "/$"|grep ":/var/deploy" >/dev/null; echo $?')
+    if NETBOOTED == '0':
+        NETBOOTED = True
+        baseStorageDir = "/opt/machines/" + HW + '/'
+else:
+    #TODO: how to find iface info on windows?
+    HW = ''
+    NETBOOTED = False
 
 # LOGGING
 log_basename = 'misura.log'
@@ -136,17 +143,16 @@ log_backup_count = int(1.*log_disk_space / log_file_dimension) + 1
 
 # DERIVED PATHS
 defaults = baseStorageDir
-webdir = baseStorageDir + 'web/'
-
+webdir = os.path.join(baseStorageDir, 'web', '')
 
 # Will be redefined later
 storagedir = baseStorageDir
 confdir = storagedir
-datadir = storagedir + 'data/'
+datadir = os.path.join(storagedir, 'data', '')
 tmpdir = baseTmpDir
 rundir = baseRunDir
-logdir = datadir + 'log/'
-log_filename = logdir + log_basename
+logdir = os.path.join(datadir, 'log', '')
+log_filename = os.path.join(logdir, log_basename)
 
 
 def create_dirs(vd):
@@ -170,7 +176,7 @@ def set_confdir(cf):
 def set_datadir(dd):
     global datadir, logdir, log_filename
     datadir = dd
-    logdir = datadir + 'log/'
+    logdir = os.path.join(datadir, 'log', '')
     log_filename = logdir + log_basename
     create_dirs([datadir, logdir])
     print 'set datadir', dd
@@ -187,12 +193,12 @@ def regenerateDirs():
     """Redefine and regenerate directories"""
     global confdir, datadir, logdir, log_filename, rundir
     confdir = storagedir
-    vd = [tmpdir, rundir, tmpdir + 'profile']
-    datadir = storagedir + 'data/'
+    vd = [tmpdir, rundir, os.path.join(tmpdir, 'profile')]
+    datadir = os.path.join(storagedir, 'data', '')
     vd.append(datadir)
-    logdir = datadir + 'log/'
+    logdir = os.path.join(datadir, 'log', '')
     vd.append(logdir)
-    log_filename = logdir + log_basename
+    log_filename = os.path.join(logdir, log_basename)
     create_dirs(vd)
 
 
@@ -200,9 +206,9 @@ def setInstanceName(name=False):
     global storagedir, tmpdir, rundir
     if name:
         # FIXME: re-test, very old code! Must adapt also other dirs?
-        storagedir += name + '/'
-        tmpdir += name + '/'
-        rundir += name + '/'
+        storagedir += name + sep
+        tmpdir += name + sep
+        rundir += name + sep
         regenerateDirs()
 
 regenerateDirs()
