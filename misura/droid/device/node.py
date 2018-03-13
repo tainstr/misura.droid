@@ -113,7 +113,11 @@ class Node(ConfigurationInterface):
         self.naturalName = self.desc.get('devpath')
         self.attach(self.parent())
         # Set the persistent folder
-        conf_dir = os.path.join(self.main_confdir, self['fullpath'])
+        fp = self['fullpath']
+        if fp=='/': fp = ''
+        if fp.startswith(params.rootdir):
+            fp = fp[len(params.rootdir):]
+        conf_dir = os.path.join(self.main_confdir, fp)
         self.desc.setConf_dir(conf_dir)
         # Create full directory tree
         bdir = ''

@@ -10,11 +10,11 @@ from . import testdir
 
 # Need to import data in order to register Conf obj
 
-print 'Importing', __name__
+print('Importing', __name__)
 
 
 def setUpModule():
-    print 'Starting', __name__
+    print('Starting', __name__)
     #ut.parallel(1)
 
 
@@ -29,7 +29,7 @@ class Node(unittest.TestCase):
         """Prepare a minimal tree"""
         params.confdir = testdir
         self.root = device.Node(node='root')
-        print self.root.desc.describe()
+        print(self.root.desc.describe())
         self.sub = device.Node(parent=self.root, node='sub')
         name = ao({},'name', 'String')['name']
         self.sub.sete('name', name.copy())

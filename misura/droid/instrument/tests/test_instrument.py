@@ -62,14 +62,13 @@ class InstrumentSetup(unittest.TestCase):
         self.obj.init_instrument()
 
     def tearDown(self):  # self.obj.devices=[self.dev1,self.dev2]
-        print '#### TEAR DOWN ####\n' * 5
+        print('#### TEAR DOWN ####\n' * 5)
         if self.obj.outFile is not False:
             self.obj.outFile.close()
-#			os.remove(hdfpath)
         self.root.close()
-        print 'Done'
+        print('Done')
 
-#@unittest.skip('')
+
 
 
 class Instrument(InstrumentSetup):
@@ -78,7 +77,7 @@ class Instrument(InstrumentSetup):
     def test_sub(self):
         self.assertTrue(hasattr(self.obj, 'measure'))
         self.assertTrue(hasattr(self.obj, 'sample0'))
-        print 'ONLY SUBDEVICE', self.obj.devices[0]['devpath']
+        print('ONLY SUBDEVICE', self.obj.devices[0]['devpath'])
         self.assertEqual(len(self.obj.devices), 2)
         self.assertEqual(self.obj.sample0.devices, [])
 
@@ -95,11 +94,10 @@ class Instrument(InstrumentSetup):
 #	@unittest.skip('')
     def test_mapRoleDev(self):
         self.obj.mapRoleDev()
-        print 'MAPPED DEVICES', self.obj.mapped_devices
+        print('MAPPED DEVICES', self.obj.mapped_devices)
         self.assertEqual(len(self.obj.mapped_devices), 3)  # smp+2 dev, no kiln
         self.assertFalse(self.obj.kiln)
         t, m = self.root.tree()
-        print m
         self.assertSetEqual(
             set(t.keys()), set(['instrument', 'self', 'dsrv', 'storage']))
         self.assertSetEqual(set(t['instrument'].keys()),
@@ -175,12 +173,12 @@ class SimpleAcquisition(InstrumentSetup):
     def test_acquisitionProcess(self):
         """Test if acquisition process works"""
         self.obj.start_acquisition()
-        print 'acquisition started'
+        print('acquisition started')
         p = multiprocessing.Process(target=self.parallel_process)
         p.daemon = self.obj._daemon_acquisition_process
-# 		sleep(3)
+        sleep(3)
         p.start()
-        sleep(10)
+        sleep(2)
         self.assertFalse(self.obj.root['initTest'])
         self.assertTrue(self.obj.root['isRunning'])
 
@@ -197,7 +195,7 @@ class SimpleAcquisition(InstrumentSetup):
         d = loads(tree)
         self.assertEqual(
             elp, d['instrument']['measure']['self']['elapsed']['current'])
-        print 'ELAPSED', elp
+        print('ELAPSED', elp)
         T = self.T
         pos = self.pos
         sT = hdf.root.dsrv.dev1.val.cols.v

@@ -5,6 +5,7 @@ import os
 import sys
 from commands import getoutput as go
 import pkg_resources
+from traceback import print_exc
 
 isWindows = os.name == 'nt'
 sep = '\\' if isWindows else '/'
@@ -124,11 +125,12 @@ from multiprocessing import Value
 ssl_private_key = ''
 ssl_cacert = ''
 try:
-    ssl_private_key = pkg_resources.resource_filename(
-                                                      'misura.droid.server', 'privkey.pem')
-    ssl_cacert = pkg_resources.resource_filename('misura.droid.server', 'cacert.pem')
+    ssl_private_key = os.path.join(mdir,'server','privkey.pem') 
+    #pkg_resources.resource_filename('misura.droid.server', 'privkey.pem')
+    ssl_cacert = os.path.join(mdir,'server','cacert.pem')
+    #pkg_resources.resource_filename('misura.droid.server', 'cacert.pem')
 except:
-    pass
+    print_exc()
 ssl_enabled = True
 
 ERRVAL = 2.**127
