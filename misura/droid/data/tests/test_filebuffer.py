@@ -100,26 +100,26 @@ class FileBuffer(unittest.TestCase):
         for i in range(fb.idx_entries * 2):
             fb.write(p, 0)
             self.check_invalid(valid=True)
-        print 'done write'
+        print('done write')
 
     def test_sequence(self):
         fb = self.fb
         rg = range(fb.idx_entries)
         for i in rg:
-            print 'writing', i
+            print('writing', i)
             t0 = time()
             if i == 25:
                 t = t0
             fb.write(p, i, t0)
-        print 'Sequencing0'
+        print('Sequencing0')
         seq = fb.sequence(p, 0)
         v = [e[1] for e in seq]
         self.assertEqual(v, rg)
-        print 'Sequencing1'
+        print('Sequencing1')
         seq = fb.sequence(p, -10)
         v = [e[1] for e in seq]
         self.assertEqual(v, rg[-10:])
-        print 'Searching time'
+        print('Searching time')
         # Search for time
         i0 = fb.get_time_idx(p, t)
         # Check with lower level
@@ -200,17 +200,17 @@ class FileBuffer(unittest.TestCase):
     def test_clear(self):
         fb = self.fb
         meta = 'metainfo'
-        print 'Writing'
+        print('Writing')
         [fb.write(p, i, newmeta=meta) for i in range(10)]
-        print 'Getting last item'
+        print('Getting last item')
         last = fb.get_item(p, -1)
-        print 'Clearing'
+        print('Clearing')
         fb.clear(p)
-        print 'last1'
+        print('last1')
         last1 = fb.get_item(p, -1)
         self.assertEqual(last, last1)
         self.assertEqual(fb.get_info(p)[:2], (0, 1))
-        print 'done clear'
+        print('done clear')
 
     def test_nocron(self):
         """Not keeping cronology"""
@@ -230,7 +230,7 @@ class FileBuffer(unittest.TestCase):
             #self.fb.get_idx(p+str(pid), 0)
             i+=1
         v = 1.*i/dt
-        print 'W', pid, v
+        print('W', pid, v)
         self.w_tot.value += v
             
         
@@ -241,7 +241,7 @@ class FileBuffer(unittest.TestCase):
             self.fb.get_idx(p+str(pid), 0)
             i += 1
         v = 1.*i/dt
-        print 'R', pid, v
+        print('R', pid, v)
         self.r_tot.value += v
     
     def test_performance(self):
@@ -269,7 +269,7 @@ class FileBuffer(unittest.TestCase):
         map(j, w)
         map(j, r)
             
-        print 'TOT', self.w_tot.value+self.r_tot.value, self.w_tot.value, self.r_tot.value
+        print('TOT', self.w_tot.value+self.r_tot.value, self.w_tot.value, self.r_tot.value)
         
 
 

@@ -79,6 +79,7 @@ class DirShelf(FileBuffer):
         else:
             cur = val
         self.write(self.fp(key), cur, t=t, newmeta=newmeta)
+        
     __setitem__ = set
 
     def set_current(self, key, val, t=-1):

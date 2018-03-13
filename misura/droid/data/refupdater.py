@@ -9,7 +9,7 @@ import numpy as np
 
 from misura.canon import reference
 from misura.canon.csutil import lockme
-from filebuffer import FileBuffer
+from filebuffer import FileBuffer, LOCK_SH
 
 # TODO: Evaluate inotifyx for more efficient scan!
 
@@ -263,7 +263,7 @@ class ReferenceUpdater(object):
         try:
             #           mt=os.stat(path).st_mtime # not reliable for mmapped files!
             # Lock the file with low-level fopen()
-            fbuffer.fopen(path)
+            fbuffer.fopen(path, LOCK_SH)
             mt = fbuffer.mtime  # real last mod
         except:
             print 'ReferenceUpdater.collect: error ', path

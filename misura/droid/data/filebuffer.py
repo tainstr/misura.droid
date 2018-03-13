@@ -1,16 +1,6 @@
 # -*- coding: utf-8 -*-
 """Filesystem-level CircularBuffer implementation"""
 import os
-
-if os.name=='nt':
-    isWindows = True
-    import msvcrt
-    LOCK_EX, LOCK_SH, LOCK_UN = msvcrt.LK_NBLCK, msvcrt.LK_NBRLCK, msvcrt.LK_UNLCK
-else:
-    isWindows = False
-    import fcntl
-    from fcntl import LOCK_EX, LOCK_SH, LOCK_UN
-import struct
 import mmap
 import collections
 import numpy as np
@@ -20,20 +10,149 @@ from traceback import print_exc
 from cPickle import dump, dumps, loads, HIGHEST_PROTOCOL
 import exceptions
 import multiprocessing
-
+from time import time, sleep
 from misura.canon import csutil
 
 from misura.droid import utils
+from __builtin__ import False
 
-def lockf(fd, mode):
-    """Unix-compatible call to msvcrt file locking"""
-    if not isWindows: 
-        return fcntl.lockf(fd, mode)
-    os.lseek(fd, 0, 0)
-    try:
-        return msvcrt.locking(fd, mode, 1)
-    except:
-        return False
+isWindows = os.name == 'nt'
+
+LOCK_FR = 0
+LOCK_UN = 1
+
+LOCK_SH = 2
+LOCK_EX = 3
+
+LOCK_NBSH = 4
+LOCK_NBEX = 6
+
+flags = os.O_RDWR 
+if not isWindows:
+    flags |= os.O_SYNC
+
+class SharedMemoryLock(object):
+    """In-memory registry for file locking statuses.
+    Makes file-locking fast and fully cross-platform."""
+    timeout = 5
+    
+    def __init__(self, N=10000):
+        self.cache = {}
+        self.free = set(range(N))
+        # 0=free address, 1=unlocked, 2=locked
+        self.locks = [multiprocessing.Value('i') for i in self.free]
+    
+    def _read(self, path):
+        idx = int(open(path+'.lk', 'rb').read())
+        self.cache[path] = idx
+        if idx in self.free:
+            self.free.remove(idx) 
+        return idx 
+    
+    def _idx(self, path):      
+        idx = self.cache.get(path, -1)
+        if idx<0:
+            idx = self._read(idx)
+        return idx        
+    
+    def unlock(self, path):
+        """Set `path` to unlocked"""
+        idx = self._idx(path)
+        self.locks[idx].value = LOCK_UN
+        return True
+        
+    def lock(self, path, value=LOCK_EX, timeout=-1):
+        """Lock `path` with locking `value`.
+        Returns False on failure."""
+        if value==LOCK_UN:
+            return self.unlock(path)
+        if value==LOCK_FR:
+            return self.clear(path)
+        
+        idx = self._read(path)
+        lk = self.locks[idx]
+        if lk.value==LOCK_FR:
+            print('Cannot lock unassigned address', idx, path)
+            raise exceptions.MemoryError('FileBuffer lock address is invalid {} {}'.format(idx, path))
+            return False
+        
+        # If unlocked, apply right away
+        if lk.value == LOCK_UN:
+            self.locks[idx].value = value
+            return True
+        
+        if timeout<0:
+            timeout=self.timeout
+        
+        # Check if operation is non-blocking
+        nonblock = value>3
+        if nonblock:
+            value /= 2
+            
+        # Can overlock with shared
+        if lk.value==LOCK_SH and value==LOCK_SH:
+            return True
+        
+        # Wait for exclusive lock to go away
+        # Or a shared lock if we are trying to get an exclusive lock
+        t0 = -1
+        while (not nonblock) and (lk.value==LOCK_EX or (value==LOCK_EX and lk.value==LOCK_SH)):
+            if t0<0:
+                t0=time()
+            elif time()-t0>timeout:
+                break
+            sleep(0.001)
+        if t0>0:
+            print('SharedMemoryLock.lock WAITED', time()-t0, path, value)
+        # Cannot lock anyway with exclusive
+        if lk.value==LOCK_EX:
+            print('FileBuffer was exclusively locked', idx, path, value)
+            raise exceptions.MemoryError('FileBuffer was exclusivly locked {} {} {}'.format(idx, path, value))
+        # Apply lock
+        self.locks[idx].value = value
+        return True
+    
+    def refresh(self):
+        """Refresh free addresses set"""
+        self.free = set()
+        for i, lock in enumerate(self.locks):
+            if lock.value==LOCK_FR:
+                self.free.add(i)
+        assert len(self.free)>0, 'OUT OF FREE LOCK ADDRESSES!'
+        
+    
+    def new(self, path):
+        """Init a new lock on `path`"""
+        idx = -1
+        while len(self.free):
+            idx0 = self.free.pop()
+            # Should stop immediately unless parallel process reserved
+            # some other addresses
+            if self.locks[idx].value==LOCK_FR:
+                idx=idx0
+                break
+        if idx<0:
+            self.refresh()
+            # Repeat
+            return self.new(path)
+        self.cache[path] = idx
+        self.locks[idx].value=LOCK_UN
+        fo = open(path+'.lk','wb')
+        fo.write(str(idx))
+        fo.close()
+        
+    def clear(self, path):
+        """Free the path's locking address."""
+        idx = self._read(path)
+        self.locks[idx].value = 0
+        if path in self.cache:
+            self.cache.pop(path)
+        if os.path.exists(path+'.lk'):
+            os.remove(path+'.lk')
+        
+        
+        
+locker = SharedMemoryLock()
     
 
 
@@ -45,7 +164,7 @@ def exclusive(func, lock=LOCK_EX):
         try:
             r = func(self, *a, **k)
         except:
-            print 'Calling func', func.__name__, path, a, k
+            print('Calling func', func.__name__, path, a, k)
             print_exc()
             raise
         finally:
@@ -54,23 +173,19 @@ def exclusive(func, lock=LOCK_EX):
         return r
     return exclusive_wrapper
 
-
+def shared(func):
+    """fopen with shared locking"""
+    return exclusive(func, lock=LOCK_SH)
 
 def clean_cache(obj):
     """Shrink cache to its maximum length by closing oldest files."""
     i = 0
     for i in range(0, len(obj.cache) - obj.cache_len):
         # remove and close the first inserted item
-        oldp, (oldfd, oldlfd) = obj.cache.popitem(False)
-        lockf(oldlfd, LOCK_UN)
+        oldp, oldfd = obj.cache.popitem(False)
         os.close(oldfd)
-        if oldfd!=oldlfd:
-            os.close(oldlfd)
     return i
 
-def shared(func):
-    """fopen with shared locking"""
-    return exclusive(func, lock=LOCK_SH)
 
 class FileBuffer(object):
 
@@ -99,7 +214,10 @@ class FileBuffer(object):
     """Inter-process locking. Avoids concurrent threads/processes using the same buffer object"""
     info = -1, 0, -1
     """Uninitialized info tuple (high/current index, total count, modification time)"""
-
+    path = False
+    fd = -1
+    mm = False
+    
     def __init__(self, private_cache=False):
         """private_cache: use global FileBuffer.cache and _lock class attributes if False, 
         otherwise instantiated a new private cache and lock"""
@@ -119,66 +237,66 @@ class FileBuffer(object):
         fo.write(self.empty_entry * self.idx_entries)
         fo.write(' ' * self.meta_len)
         fo.close()
-        
-        if isWindows:
-            lo = open(path+'.lk', 'wb')
-            lo.write(' ')
-            lo.close()
+        locker.new(path)
             
-    def remap(self, fd, lfd, lock):
-        if fd <= 0:
+    def remap(self, fd, path, lock):
+        if fd < 0:
             return False
         # Lock must precede mmap
-        lockf(lfd, lock)
+        try:
+            locker.lock(path, lock)
+        except:
+            raise
+        
         try:
             # Must re-map each time
             self.mm = mmap.mmap(fd, length=0)
         except:
+            locker.unlock(path)
             return False
+        
         self.fd = fd
-        self.lfd = lfd
         self.info = self._get_info()
         self.mm.seek(0)
+        self.path = path
         return True
 
     def fopen(self, path, lock=LOCK_EX):
         """Open a file in path, handling the locking"""
         self._lock.acquire()
-        self.path = path
-        fd, lfd = self.cache.get(path, (-1,-1))
-        if self.remap(fd, lfd, lock):
+        
+        fd = self.cache.get(path, -1)
+        if self.remap(fd, path, lock):
             return self.mm, self.fd
-        # And initialize the indexed file, if exclusive lock was required
+        
+        # Initialize the indexed file, if exclusive lock was required
         # (writing)
-        ex = os.path.exists(path)
-        if isWindows:
-            ex *= os.path.exists(path+'.lk')
+        ex = os.path.exists(path) and os.path.exists(path+'.lk')
         if not ex:
-            if lock == LOCK_EX or self.cache_len == 0:
+            if lock in [LOCK_EX, LOCK_NBEX]:
                 self.init(path)
             else:
                 self._lock.release()
                 raise exceptions.KeyError(
-                    'Non-existent path for reading: ' + path)
-        flags = os.O_RDWR 
-        if not isWindows:
-            flags |= os.O_SYNC
+                    'Non-existent FileBuffer for reading: ' + path)
+            
+        # Lock must precede mmap
+        try:
+            locker.lock(path, lock)
+        except:
+            self._lock.release()
+            raise
+        
+        self.path = path
         # Open the file descriptor
         self.fd = os.open(path, flags)
-        
-        if isWindows:
-            self.lfd = os.open(path+'.lk', flags)
-        else:
-            self.lfd = self.fd
-        # Lock must precede mmap
-        lockf(self.lfd, lock)
         # Create the memory map
         self.mm = mmap.mmap(self.fd, length=0)
 
         # Manage caching
         if self.cache_len > 0:
             clean_cache(self)
-            self.cache[path] = (self.fd, self.lfd)
+            self.cache[path] = self.fd
 
         self.info = self._get_info()
         return self.mm, self.fd
@@ -192,11 +310,9 @@ class FileBuffer(object):
         for p in self.cache.keys():
             if not p.startswith(basepath):
                 continue
-            (fd,lfd) = self.cache.pop(p)
-            lockf(lfd, LOCK_UN)
+            fd = self.cache.pop(p)
+            locker.unlock(p)
             os.close(fd)
-            if lfd!=fd:
-                os.close(lfd)
         try:
             self._lock.release()
         except:
@@ -210,14 +326,13 @@ class FileBuffer(object):
         if self.mm:
             self.mm.flush()  # needed to actually sync
             self.mm = False
-        if self.fd >= 0:
-            lockf(self.lfd, LOCK_UN)
-            if self.cache_len <= 0:
-                os.close(self.fd)
-                if self.lfd!=self.fd:
-                    os.close(self.lfd)
-                self.fd = -1
-                self.lfd = -1
+        if self.path:
+            locker.unlock(self.path)
+            self.path = False
+        if self.cache_len <= 0 and self.fd >= 0:
+            os.close(self.fd)
+            self.fd = -1
+            
         try:
             self._lock.release()
         except:
@@ -279,12 +394,12 @@ class FileBuffer(object):
         """Return index values at `idx`"""
         idx = self.idx(idx0)
         if idx < 0:
-            print 'Invalid index request', self.path, self.info, idx0, idx
+            print('Invalid index request', self.path, self.info, idx0, idx)
             return -1, -1, -1
         # Always exclude the info line
         start = (idx + 1) * self.idx_len
         if self.mm[start] == self.invalid:  # invalid entry detected
-            #           print 'Invalid index entry',self.path, idx0,idx
+            #           print('Invalid index entry',self.path, idx0,idx)
             return -1, -1, -1
         end = start + self.idx_len
         s = self.mm[start:end]
@@ -296,7 +411,7 @@ class FileBuffer(object):
     def get_idx(self, idx):
         r = self._get_idx(idx)
         if r[1] < 0:
-            print 'Invalid index'
+            print('Invalid index')
         return r
 
     @shared
@@ -328,7 +443,7 @@ class FileBuffer(object):
     def _get_time_idx(self, t):
         # If requested time is bigger than last entry, return -1 index
         if t > self.info[2]:
-            #           print 'Bigger time', self.info
+            #           print('Bigger time', self.info)
             return -1
         # bisect search using self._time handler
         i = csutil.find_nearest_val(self, t, get=self._time)
@@ -347,7 +462,7 @@ class FileBuffer(object):
         nt, ns, ne = -1, -1, -1
         while idx < N:
             nt, ns, ne = self._get_idx(idx)
-            print 'require idx,', idx0, idx, nt, ns, ne
+            print('require idx,', idx0, idx, nt, ns, ne)
             if ns > 0:
                 # Valid entry found
                 break
@@ -386,7 +501,7 @@ class FileBuffer(object):
                     continue
                 # if the current entry ends after the next, invalidate the next
                 if end_byte >= ns:
-                    # print 'invalidating',self.path,idx,nidx,end_byte,ns
+                    # print('invalidating',self.path,idx,nidx,end_byte,ns)
                     self.set_idx(nidx, -1, -1, -1)
                 else:
                     break
@@ -433,7 +548,7 @@ class FileBuffer(object):
         if res > 0:
             self.mm.resize(sz + res)
             self.mm.seek(0, os.SEEK_SET)
-#           print 'Resizing',start_byte,sz,end_byte,res,len(fo),len(g)
+#           print('Resizing',start_byte,sz,end_byte,res,len(fo),len(g))
         self.mm[start_byte0:end_byte] = self.separator + g
         self.set_idx(-1, t, start_byte, end_byte)
         if newmeta:
@@ -442,9 +557,9 @@ class FileBuffer(object):
 
     def clear(self, path):
         """Clear buffer `path` and re-init with latest values"""
-        # NEED MANUAL LOCKING MANAGEMENT
         if not os.path.exists(path):
             return False
+        # NEED MANUAL LOCKING MANAGEMENT
         self.fopen(path)
         # Collect latest metadata and value
         meta = self._get_meta()
@@ -452,14 +567,10 @@ class FileBuffer(object):
         self.fclose()
         # Remove from cache and FS
         if self.cache_len > 0:
-            fd, lfd = self.cache.pop(path)
-            lockf(lfd, LOCK_UN)
+            fd = self.cache.pop(path)
+            locker.unlock(path)
             os.close(fd)
-            if lfd!=fd:
-                os.close(lfd)
         os.remove(path)
-        if isWindows:
-            os.remove(path+'.lk')
         # This will re-init a blank file with the latest values.
         self.write(path, val, t, newmeta=meta)
         return True
@@ -468,13 +579,13 @@ class FileBuffer(object):
         """Return sequence element at `idx`"""
         t, s, e = self._get_idx(idx)
         if s < 0:
-            #           print '_get_item',t,s,e
+            #           print('_get_item',t,s,e)
             return False
         dat = self.mm[s:e]
         try:
             obj = loads(dat)
         except:
-            print '_get_item', self.path, t, s, e, dat
+            print('_get_item', self.path, t, s, e, dat)
             print_exc()
             raise
         return [t, obj]
@@ -484,7 +595,7 @@ class FileBuffer(object):
             meta = loads(
                 self.mm[self.start_meta_position:self.start_meta_position + self.meta_len])
         except:
-            print '_get_meta'
+            print('_get_meta')
             print_exc()
             raise
         return meta
@@ -498,7 +609,7 @@ class FileBuffer(object):
         """Get item from `path` at index `idx`"""
         r = self._get_item(idx)
         if r is False:
-            print 'Error get_item'
+            print('Error get_item')
         elif meta:
             m = self._get_meta()
             m['current'] = r[1]
@@ -509,7 +620,7 @@ class FileBuffer(object):
         """Get latest item"""
         r = self.get_item(path, -1, meta)
         if r is False:
-            print 'Error reading', path
+            print('Error reading', path)
             return False
         return r[1]
 
@@ -524,7 +635,7 @@ class FileBuffer(object):
             e = N
         if e < 0:
             e += N
-#       print 'SEQUENCING',s,e
+#       print('SEQUENCING',s,e)
         if s == e:
             return [self._get_item(s)]
         out = []
@@ -532,9 +643,9 @@ class FileBuffer(object):
             try:
                 out.append(self._get_item(i))
             except:
-                print 'trying to unpickle', self.path, i
+                print('trying to unpickle', self.path, i)
                 print_exc()
-#       print 'Returning sequence',startIdx,endIdx,s,e,len(out),self.info
+#       print('Returning sequence',startIdx,endIdx,s,e,len(out),self.info)
         return out
 
     @shared
