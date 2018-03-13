@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """/opt/misura/misura/conf/Server.Device"""
+import os
+isWindows = os.name=='nt'
 
 plugins="""
 misura.droid.users.Users
@@ -15,8 +17,20 @@ misura.microscope.Hsm
 misura.dilatometer.VerticalDilatometer
 misura.dilatometer.HorizontalDilatometer
 misura.flex.Flex
-misura.dta.DTA
 """
+
+if isWindows:
+    plugins="""
+misura.droid.users.Users
+misura.droid.storage.Storage
+misura.droid.support.Support
+#GROUP
+misura.morla.Morla
+misura.smaug.Smaug
+#GROUP
+misura.kiln.Kiln
+"""
+
 
 conf = [
     # Main (Status)

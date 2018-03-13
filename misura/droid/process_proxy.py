@@ -253,7 +253,10 @@ class ProcessProxy(object):
         while (not os.path.exists(self._pid_path)) and (time()-t0 < self._timeout):
             sleep(0.1)
         if not os.path.exists(self._pid_path):
-            self._log.debug('ProcessProxy unable to start!!!', self._cls.__name__, self._args, self._kwargs)
+            self._log.debug('ProcessProxy unable to start!!!', self._cls.__name__, 
+                            self._args, 
+                            self._kwargs,
+                            self._pid_path)
             raise RuntimeError('ProcessProxy cannot start!!!')
         self._set_logging(self._log_path, self._log_owner)
         self._log.debug('ProcessProxy started', self._pid_path)
