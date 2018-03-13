@@ -21,6 +21,11 @@ from misura.canon.csutil import *
 
 csutil.binfunc = xmlrpc.Binary
 
+isWindows = os.name=='nt'
+psutil = False
+if isWindows:
+    import psutil
+
 
 def defer(func):
     """deferToThread decorator"""
@@ -43,6 +48,8 @@ def check_pid(pid):
     """ Check For the existence of a unix pid. """
     if pid <= 0:
         return False
+    if isWindows:
+        return psutil.pid_exists(pid)
     try:
         os.kill(pid, 0)
     except OSError:
@@ -69,6 +76,13 @@ def kill_pid(pid):
     """Terminate process `pid`"""
     if pid <= 0:
         return False
+    if isWindows:
+        #TODO: test linux and unify
+        p = psutil.Process(pid)
+        for sub in p.children():
+            sub.terminate()
+        p.kill()
+        return True
     try:
         os.kill(pid, 9)
     except OSError:
@@ -168,7 +182,7 @@ def apply_time_delta(delta):
     """Change hardware clock by `delta` seconds"""
     if delta < 1:
         return False
-    print 'APPLY TIME DELTA',delta
+    print('APPLY TIME DELTA',delta)
     ago = ''
     if delta<0:
         ago = 'ago'
@@ -177,7 +191,7 @@ def apply_time_delta(delta):
     r=go(cmd)
     # Sync to hardware clock for next reboot
     r1 = go("sudo hwclock --systohc")
-    print 'apply_time_delta',cmd,r,r1
+    print('apply_time_delta',cmd,r,r1)
 
 avahi = False
 dbus = False
