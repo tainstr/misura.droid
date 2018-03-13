@@ -41,7 +41,7 @@ class DirShelf(FileBuffer):
         else:
             viewdir = new_name(self.basedir) + sep
         self.viewdir = viewdir
-        self.dir = self.basedir + self.viewdir
+        self.dir = os.path.join(self.basedir, self.viewdir)
         self.protocol = protocol
         if desc:
             self.update(desc)
@@ -65,14 +65,16 @@ class DirShelf(FileBuffer):
     def fp(self, key):
         """Object path"""
         if key == '':
-            return self.dir + 'self'
-        return self.dir + str(key) + sep + 'self'
+            return os.path.join(self.dir, 'self')
+        return os.path.join(self.dir, str(key), 'self')
 
     def set(self, key, val, t=-1, newmeta=True):
         if newmeta:
             val = deepcopy(val)
             cur = val.pop('current')
-            assert val['handle'] == key, 'Handle mismatch: {} {}'.format(key, val['handle'])
+            if val['handle'] != key:
+                print('Handle mismatch: {} {} {}'.format(key, val['handle'], self.dir))
+                val['handle'] = key
             newmeta = val
         else:
             cur = val

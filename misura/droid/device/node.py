@@ -78,7 +78,7 @@ class Node(ConfigurationInterface):
         self.roledev = {}
         """Role->Dev mapping dictionary"""
         if node in forbidden_node_names:
-            print 'Forbidden node name', node
+            print('Forbidden node name', node)
             return
         self.conf_def = deepcopy(self.conf_def)
         self._parent = parent
@@ -106,14 +106,14 @@ class Node(ConfigurationInterface):
         udev = self.query_udev(node)
         for k, v in udev.iteritems():
             if not self.desc.has_key(k):
-                print 'skipping queryudev key', k, v
+                print('skipping queryudev key', k, v)
                 continue
             self[k] = v
         self.desc.setKeep_names(['dev', 'devpath', 'fullpath'])
         self.naturalName = self.desc.get('devpath')
         self.attach(self.parent())
         # Set the persistent folder
-        conf_dir = '%s%s' % (self.main_confdir, self['fullpath'].lstrip(params.sep))
+        conf_dir = os.path.join(self.main_confdir, self['fullpath'])
         self.desc.setConf_dir(conf_dir)
         # Create full directory tree
         bdir = ''
@@ -173,17 +173,17 @@ class Node(ConfigurationInterface):
     def close(self):
         """Closes the object and any associated resource.
         Removes any references in the tree."""
-        print 'Node.close', type(self), id(self)
+        print('Node.close', type(self), id(self))
         if self.desc is False:
-            print 'Node.close no desc',  type(self), id(self)
+            print('Node.close no desc',  type(self), id(self))
             return False
         if self.desc.dir is False:
-            print 'Already closed'
+            print('Already closed')
             return False
         if not os.path.exists(self.desc.dir):
-            print 'Already deleted', self.desc.dir
+            print('Already deleted', self.desc.dir)
             return False
-        print 'detaching', self.desc.dir
+        print('detaching', self.desc.dir)
         self.detach()
         for k, v in self.subHandlers.items():
             if v is self:
@@ -191,7 +191,7 @@ class Node(ConfigurationInterface):
             if k in forbidden_node_names:
                 continue
             del self.subHandlers[k]
-            print 'Closing sub handler', k
+            print('Closing sub handler', k)
             try:
                 v.close()
             except:
@@ -213,7 +213,7 @@ class Node(ConfigurationInterface):
         try:
             odp = self['devpath']
         except NoProperty:
-            print 'failed detach', type(self), id(self)
+            print('failed detach', type(self), id(self))
             return i
         if odp != '':
             ci = getattr(p, odp, False)
@@ -225,13 +225,13 @@ class Node(ConfigurationInterface):
         if myid in idx:
             i = idx.index(myid)
             k = p.subHandlers.keys()[i]
-            print 'Removing subHandler', k
+            print('Removing subHandler', k)
             del p.subHandlers[k]
         # Remove from parent's devices list
         idx = [id(obj) for obj in p.devices]
         if myid in idx:
             i = idx.index(myid)
-            print 'Removing device', i
+            print('Removing device', i)
             p.devices.pop(i)
         self._parent = None
         return i
@@ -241,7 +241,7 @@ class Node(ConfigurationInterface):
         r = []
         for dev in self.devices:
             dp = dev['devpath']
-            print 'list', dp, dev['name']
+            print('list', dp, dev['name'])
             r.append(   (dev.get('name', dp), dp)   )
         return r
     xmlrpc_list = list
@@ -278,7 +278,7 @@ class Node(ConfigurationInterface):
         if fullpath0 == '.':
             return self['fullpath']
         if fullpath0 in ['None', 'none']:
-            print 'searchPath: asked for None'
+            print('searchPath: asked for None')
             return False
         sfp = self['fullpath'].replace('//', '/')
         if not fullpath0.startswith(sfp):
@@ -287,7 +287,6 @@ class Node(ConfigurationInterface):
             return False
         # Cut the full path where itself is found
         fullpath = fullpath0[len(sfp):].split('/')[:-1]
-#       print 'searchPath: analyzing',fullpath0,fullpath
         # Verify existence
         obj = self
         for p in fullpath:
@@ -295,7 +294,6 @@ class Node(ConfigurationInterface):
             if not obj:
                 self.log.error('searchPath: not found!', fullpath0, fullpath)
                 return False
-#       print 'SearchPath: returning',fullpath
         if not len(fullpath):
             return self['fullpath']
         return '/'.join(fullpath)
@@ -374,7 +372,6 @@ class Node(ConfigurationInterface):
         out = {'self': self.describe()}
         pref = self.getSubHandlerPrefixes()
         pref = [d['devpath'] for d in self.devices]
-#       print 'Subhandler prefixes',pref
         # Find real object names
         childs = {}
         for p in pref:
@@ -384,7 +381,7 @@ class Node(ConfigurationInterface):
             if childs.has_key(obj):
                 # Better name than automatic names:
                 if childs[obj].startswith('idx'):
-                    print 'Substituting name:', childs[obj], p
+                    print('Substituting name:', childs[obj], p)
                     childs[obj] = p
             else:
                 childs[obj] = p
@@ -394,8 +391,6 @@ class Node(ConfigurationInterface):
                 continue
             msg += '   ' * level + '|--> ' + p + '\n'
             out[p], msg = obj.tree(level=level + 1, msg=msg)
-#       if level==1:
-#           print msg
         return out, msg
 
     def compare_option(self, *keys):
