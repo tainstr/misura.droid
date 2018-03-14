@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Simple remote object access via FileBuffer."""
+"""Simple remote object access via network sockets."""
 import os
 from time import sleep, time
 from traceback import print_exc, format_exc
@@ -17,10 +17,9 @@ import utils
 sep = '#$#$#$****&&%$#(*⁽&%#--#--#--#'
 
 isWindows = os.name=='nt'
-base_path = '/tmp/misura'
-dsep = '/'
+base_path = '/dev/shm/misura'
 if isWindows:
-    dsep = '\\'
+    base_path='C:\dev\shm\misura'
 
 class ProcessProxy(object):
     _protect = set([])
@@ -33,7 +32,7 @@ class ProcessProxy(object):
     _max_restarts = 100
     _timestamp = -1
 
-    def __init__(self, cls, base_path='/tmp/misura', exit_on_exception=False):
+    def __init__(self, cls, base_path=base_path, exit_on_exception=False):
         """Acts as a proxy to a remote instance of `cls`
         which will be created in a parallel process upon ProcessProxy.start().
         All calls to ProcessProxy methods not starting with '_' will be redirected to the remote object.
@@ -62,7 +61,7 @@ class ProcessProxy(object):
         self._log_path = log_path
         self._log_owner = owner
         self._log.log_path = log_path
-        self._log.owner = owner+'pp'+self._cls.__name__+dsep
+        self._log.owner = owner+'pp'+self._cls.__name__+'/'
         self._log.debug('Set ProcessProxy logging to', log_path, owner)
 
     def _set_logging(self, log_path,  owner='ProcessProxy'):
@@ -257,7 +256,7 @@ class ProcessProxy(object):
                             self._args, 
                             self._kwargs,
                             self._pid_path)
-            raise RuntimeError('ProcessProxy cannot start!!!')
+            raise RuntimeError('ProcessProxy cannot start!!! '+self._pid_path)
         self._set_logging(self._log_path, self._log_owner)
         self._log.debug('ProcessProxy started', self._pid_path)
         

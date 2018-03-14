@@ -13,13 +13,14 @@ def setUpModule():
     print 'Starting', __name__
 
 dspath = '/dev/shm/misura/test'
-
+if os.name=='nt':
+    dspath='C:\\dev\\shm\\misura\\test'
 
 class TestRefUpdater(unittest.TestCase):
 
     def setUp(self):
         self.zerotime = time()
-        self.k = dspath + '/refup/h/self'
+        self.k = os.path.join(dspath,'refup', 'h', 'self')
         if os.path.exists(self.k):
             os.remove(self.k)
         self.sh = SharedFile('reftest.h5', mode='w')
@@ -35,9 +36,10 @@ class TestRefUpdater(unittest.TestCase):
     def changeval(self, nval):
         print 'CHANGEVAL', nval
         t0 = time()
-        sleep(0.00001)
+        sleep(0.1)
         t1 = time()
         self.ds.set_current('h', nval, t1)
+        sleep(0.1)
         t2 = time()
         self.assertTrue(self.ru.sync())
         rt = self.ru.cache[self.k].mtime

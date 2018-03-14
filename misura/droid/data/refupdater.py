@@ -13,7 +13,10 @@ from filebuffer import FileBuffer, LOCK_SH
 
 # TODO: Evaluate inotifyx for more efficient scan!
 
-
+log_marker = '/log/self'
+if os.name=='nt':
+    log_marker = '\\log\\self'
+    
 class ReferenceUpdater(object):
     outfile = False
     zerotime = 0
@@ -38,7 +41,7 @@ class ReferenceUpdater(object):
         for t in self.pool:
             t.join(0.5)
         n = self.commit_results(self.callback_result)
-        print 'ReferenceUpdater.close: committed results', n
+        print('ReferenceUpdater.close: committed results', n)
         return True
 
     def __del__(self):
@@ -65,7 +68,7 @@ class ReferenceUpdater(object):
             self.buffers.append(fb)
         self.main_buffer = FileBuffer(private_cache=True)
         self.main_buffer.cache_len = 0
-        print 'Refupdater.reset DONE'
+        print('Refupdater.reset DONE')
 
     def recursive_link(self, data_source, ref):
         """Recursively create all defined links"""
@@ -73,9 +76,9 @@ class ReferenceUpdater(object):
         linked = self.link.get(data_source, [])
         for p in linked:
             if (p, ref.path) in self.linked:
-                print 'Already linked', p
+                print('Already linked', p)
                 continue
-            print 'Linking', p, ref.path
+            print('Linking', p, ref.path)
             if not self.outfile.has_node(p):
                 self.outfile.link(p, ref.path)
             self.linked.add((p, ref.path))
@@ -109,8 +112,8 @@ class ReferenceUpdater(object):
         """Check if `path` should be added to self.path for monitoring.
         Only objects with 'History' attr are considered."""
         if not 'self' in names:
-            return
-        path = dirname + '/self'
+            return False
+        path = os.path.join(dirname, 'self')
         # if History is not specified, exclude this path from further sync
         opt = self.main_buffer.get_meta(path)
         attr = opt.get('attr', [])
@@ -140,20 +143,20 @@ class ReferenceUpdater(object):
         Returns number of monitored paths and updated ones."""
         self.only_logs = only_logs
         if self.paths is None:
-            print 'ReferenceUpdater.sync: no paths defined.', self.paths
+            print('ReferenceUpdater.sync: no paths defined.', self.paths)
             self.paths = {}
             return False, 0
         N = len(self.paths)
 
         # if no path is being monitored, scan the entire memory
         if N == 0:
-            print 'Walking'
+            print('Walking')
             os.path.walk(self.base, self.add_path, 0)
             N = len(self.paths)
-            print 'Walked', N
-            print 'Linked', self.link
+            print('Walked', N)
+            print('Linked', self.link)
             if N == 0:
-                print 'No path found'
+                print('No path found')
                 return False, 0
 
         if zerotime >= 0:
@@ -176,7 +179,7 @@ class ReferenceUpdater(object):
             return False
         self.running = True
         for i in range(self.nthreads):
-            print 'Starting scan thread', i
+            print('Starting scan thread', i)
             t = threading.Thread(target=self.scan_loop, args=(i,))
             t.start()
             self.pool.append(t)
@@ -191,7 +194,7 @@ class ReferenceUpdater(object):
         """When a scan ends, write out the result"""
         c = 0
         for path, elems in result:
-            if self.only_logs and not path.endswith('/log/self'):
+            if self.only_logs and not path.endswith(log_marker):
                 continue
             if elems is False:
                 # Just create an empty ref
@@ -203,7 +206,7 @@ class ReferenceUpdater(object):
             # Retrieve saved ref
             ref = self.cache.get(path, False)
             if ref is False:
-                print 'Failed finding reference!'
+                print('Failed finding reference!')
                 continue
             self.commit(ref, elems)
             c += 1
@@ -219,13 +222,13 @@ class ReferenceUpdater(object):
             for e in elems:
                 ref.append(np.array(e))
         except:
-            print 'ReferenceUpdater.commit', ref.folder, e
+            print('ReferenceUpdater.commit', ref.folder, e)
             raise
         # Interpolation step
         try:
             ref.interpolate()
         except:
-            print 'ReferenceUpdater.commit/interpolate', ref.folder, elems
+            print('ReferenceUpdater.commit/interpolate', ref.folder, elems)
             raise
         return N
 
@@ -266,7 +269,7 @@ class ReferenceUpdater(object):
             fbuffer.fopen(path, LOCK_SH)
             mt = fbuffer.mtime  # real last mod
         except:
-            print 'ReferenceUpdater.collect: error ', path
+            print('ReferenceUpdater.collect: error ', path)
             print_exc()
             fbuffer.fclose()
             return False
@@ -317,7 +320,7 @@ class ReferenceUpdater(object):
             except:
                 print_exc()
             if out is None:
-                print 'Encoding error', path, e
+                print('Encoding error', path, e)
                 continue
             elems.append(out)
             # Remember newer time
@@ -342,7 +345,7 @@ class ReferenceUpdater(object):
                 break
             p = self.paths.keys()[p]
             # Skip non-log entries
-            if self.only_logs and not p.endswith('/log/self'):
+            if self.only_logs and not p.endswith(log_marker):
                 continue
             elems = self.collect(p, buff)
             if elems is False:
@@ -358,5 +361,5 @@ class ReferenceUpdater(object):
         while self.running:
             self.scan(*a, **k)
             sleep(0.2)
-        print 'ReferenceUpdater.scan_loop: exiting', a, k
+        print('ReferenceUpdater.scan_loop: exiting', a, k)
         

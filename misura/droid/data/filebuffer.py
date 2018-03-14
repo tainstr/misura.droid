@@ -72,8 +72,13 @@ class SharedMemoryLock(object):
         idx = self._read(path)
         lk = self.locks[idx]
         if lk.value==LOCK_FR:
+            if value==LOCK_EX:
+                lk.value = value
+                return True
             print('Cannot lock unassigned address', idx, path)
-            raise exceptions.MemoryError('FileBuffer lock address is invalid {} {}'.format(idx, path))
+            raise exceptions.MemoryError('FileBuffer lock address is unassigned {} {} {}'.format(idx, 
+                                                                                                 path, 
+                                                                                                 value))
             return False
         
         # If unlocked, apply right away
@@ -90,7 +95,7 @@ class SharedMemoryLock(object):
             value /= 2
             
         # Can overlock with shared
-        if lk.value==LOCK_SH and value==LOCK_SH:
+        if lk.value==value==LOCK_SH:
             return True
         
         # Wait for exclusive lock to go away

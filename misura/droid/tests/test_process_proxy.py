@@ -9,6 +9,7 @@ from multiprocessing import Lock
 
 from misura.droid.process_proxy import ProcessProxy, ProcessProxyManager, ProcessProxyInstantiator
 
+from misura.droid import parameters as params
 
 class DummyCallable(object):
 
@@ -68,7 +69,7 @@ class TestProcessProxy(unittest.TestCase):
         
     def test_unpicklable_noinit(self):
         pp = ProcessProxy(DummyCallable)
-        pp._set_logging('/tmp/misura/pplog')
+        pp._set_logging(os.path.join(params.rootdir, 'dev','shm','misura','pplog'))
         #pp._log.debug(Lock())
         pp._max_restarts = 1
         l = Lock()
