@@ -6,6 +6,7 @@ from tables.nodes import filenode
 from pickle import loads
 
 from misura.canon.option import ao
+from misura.canon import csutil
 from misura.droid import share
 from misura.droid import device, server, storage
 
@@ -157,9 +158,10 @@ class SimpleAcquisition(InstrumentSetup):
     def tearDownClass(cls):
         pass
 
-    def parallel_process(self, wait=3):
+    def parallel_process(self, wait=3, spr=False):
         """Change options over time in a parallel process, 
         to simulate device acquisition cycle"""
+        if spr: spr()
         sleep(wait)
         for i, pos in enumerate(self.pos):
             T = self.T[i]
@@ -174,7 +176,8 @@ class SimpleAcquisition(InstrumentSetup):
         """Test if acquisition process works"""
         self.obj.start_acquisition()
         print('acquisition started')
-        p = multiprocessing.Process(target=self.parallel_process)
+        p = multiprocessing.Process(target=self.parallel_process, 
+                                    kwargs={'spr':csutil.sharedProcessResources})
         p.daemon = self.obj._daemon_acquisition_process
         sleep(3)
         p.start()

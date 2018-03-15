@@ -61,23 +61,6 @@ class MainServer(BaseServer):
     def __str__(self):
         return 'MAINSERVER ' + repr(self)
 
-    def testProcess(self):
-        while True:
-            t = utils.time()
-            self['zerotime'] = t
-            self.smaug.idx0['zerotime'] = t
-            sleep(1)
-
-    def xmlrpc_testp(self):
-        self.p = Process(target=self.testProcess)
-        self.p.daemon = True
-        self.p.start()
-        return 'start'
-
-    def xmlrpc_tests(self):
-        self.p.terminate()
-        return 'stop'
-
     def __init__(self, instanceName='',
                  port=3880,
                  confdir=params.confdir,

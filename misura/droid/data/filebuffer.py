@@ -11,6 +11,8 @@ from cPickle import dump, dumps, loads, HIGHEST_PROTOCOL
 import exceptions
 import multiprocessing
 from time import time, sleep
+from random import random
+
 from misura.canon import csutil
 
 from misura.droid import utils
@@ -27,109 +29,113 @@ LOCK_EX = 3
 LOCK_NBSH = 4
 LOCK_NBEX = 6
 
-flags = os.O_RDWR 
+flags = os.O_RDWR
 if not isWindows:
     flags |= os.O_SYNC
+
 
 class SharedMemoryLock(object):
     """In-memory registry for file locking statuses.
     Makes file-locking fast and fully cross-platform."""
     timeout = 5
-    
+
     def __init__(self, N=10000):
         self.cache = {}
         self.free = set(range(N))
         # 0=free address, 1=unlocked, 2=locked
         self.locks = [multiprocessing.Value('i') for i in self.free]
-    
+
     def _read(self, path):
         try:
-            idx = int(open(path+'.lk', 'rb').read())
+            idx = int(open(path + '.lk', 'rb').read())
         except:
             print_exc()
             return -1
         self.cache[path] = idx
         if idx in self.free:
-            self.free.remove(idx) 
-        return idx 
-    
-    def _idx(self, path):      
+            self.free.remove(idx)
+        return idx
+
+    def _idx(self, path):
         idx = self.cache.get(path, -1)
-        if idx<0:
-            idx = self._read(idx)
-        return idx        
-    
+        if idx < 0:
+            idx = self._read(path)
+        assert idx>=0, 'Cannot find path lock '+path
+        return idx
+
     def unlock(self, path):
         """Set `path` to unlocked"""
         idx = self._idx(path)
         self.locks[idx].value = LOCK_UN
         return True
-        
+
     def lock(self, path, value=LOCK_EX, timeout=-1):
         """Lock `path` with locking `value`.
         Returns False on failure."""
-        if value==LOCK_UN:
+        if value == LOCK_UN:
             return self.unlock(path)
-        if value==LOCK_FR:
+        if value == LOCK_FR:
             return self.clear(path)
-        
-        idx = self._read(path)
+
+        idx = self._idx(path)
         lk = self.locks[idx]
-        if lk.value==LOCK_FR:
-            if value==LOCK_EX:
+        if lk.value == LOCK_FR:
+            if value == LOCK_EX:
                 lk.value = value
                 return True
             print('Cannot lock unassigned address', idx, path)
-            raise exceptions.MemoryError('FileBuffer lock address is unassigned {} {} {}'.format(idx, 
-                                                                                                 path, 
-                                                                                                 value))
+            raise exceptions.MemoryError('FileBuffer lock address is unassigned {} {} {}'.format(idx,
+                                                                                                 path,
+                                                                                                 lk.value))
             return False
-        
+
         # If unlocked, apply right away
         if lk.value == LOCK_UN:
             self.locks[idx].value = value
             return True
-        
-        if timeout<0:
-            timeout=self.timeout
-        
+
+        if timeout < 0:
+            timeout = self.timeout
+
         # Check if operation is non-blocking
-        nonblock = value>3
+        nonblock = value > 3
         if nonblock:
             value /= 2
-            
+
         # Can overlock with shared
-        if lk.value==value==LOCK_SH:
+        if lk.value == value == LOCK_SH:
             return True
-        
+
         # Wait for exclusive lock to go away
         # Or a shared lock if we are trying to get an exclusive lock
         t0 = -1
-        while (not nonblock) and (lk.value==LOCK_EX or (value==LOCK_EX and lk.value==LOCK_SH)):
-            if t0<0:
-                t0=time()
-            elif time()-t0>timeout:
+        while (not nonblock) and (lk.value == LOCK_EX or (value == LOCK_EX and lk.value == LOCK_SH)):
+            if t0 < 0:
+                t0 = time()
+            elif time() - t0 > timeout:
                 break
-            sleep(0.001)
-        if t0>0:
-            print('SharedMemoryLock.lock WAITED', time()-t0, path, value)
+            sleep(random() * 0.001)
+        if t0 > 0:
+            print('SharedMemoryLock.lock WAITED', time() - t0, path, value)
         # Cannot lock anyway with exclusive
-        if lk.value==LOCK_EX:
+        if lk.value == LOCK_EX:
             print('FileBuffer was exclusively locked', idx, path, value)
-            raise exceptions.MemoryError('FileBuffer was exclusivly locked {} {} {}'.format(idx, path, value))
+            raise exceptions.MemoryError(
+                'FileBuffer was exclusivly locked {} {} {}'.format(idx, path, value))
         # Apply lock
         self.locks[idx].value = value
         return True
-    
+
     def refresh(self):
         """Refresh free addresses set"""
+        print('REFRESH', len(self.free))
         self.free = set()
         for i, lock in enumerate(self.locks):
-            if lock.value==LOCK_FR:
+            if lock.value == LOCK_FR:
                 self.free.add(i)
-        assert len(self.free)>0, 'OUT OF FREE LOCK ADDRESSES!'
-        
-    
+        assert len(self.free) > 0, 'OUT OF FREE LOCK ADDRESSES!'
+        print('FREE', len(self.free))
+
     def new(self, path):
         """Init a new lock on `path`"""
         idx = -1
@@ -137,37 +143,39 @@ class SharedMemoryLock(object):
             idx0 = self.free.pop()
             # Should stop immediately unless parallel process reserved
             # some other addresses
-            if self.locks[idx].value==LOCK_FR:
-                idx=idx0
+            if self.locks[idx].value == LOCK_FR:
+                idx = idx0
                 break
-        if idx<0:
+        if idx < 0:
             self.refresh()
             # Repeat
             return self.new(path)
         self.cache[path] = idx
-        self.locks[idx].value=LOCK_UN
-        fo = open(path+'.lk','wb')
+        self.locks[idx].value = LOCK_UN
+        fo = open(path + '.lk', 'wb')
         fo.write(str(idx))
         fo.close()
-        
+
     def clear(self, path):
         """Free the path's locking address."""
-        idx = self._read(path)
-        self.locks[idx].value = 0
+        idx = self._idx(path)
+        self.locks[idx].value = LOCK_FR
         if path in self.cache:
             self.cache.pop(path)
-        if os.path.exists(path+'.lk'):
-            os.remove(path+'.lk')
-        
-        
-        
+        #if os.path.exists(path + '.lk'):
+        #    os.remove(path + '.lk')
+
+
 locker = SharedMemoryLock()
+
 
 def set_locker(lk):
     global locker
     locker = lk
-    
+
+
 csutil.sharedProcessResources.register(set_locker, locker)
+
 
 def exclusive(func, lock=LOCK_EX):
     """Decorator for FileBuffer fopen/fclose management"""
@@ -186,9 +194,11 @@ def exclusive(func, lock=LOCK_EX):
         return r
     return exclusive_wrapper
 
+
 def shared(func):
     """fopen with shared locking"""
     return exclusive(func, lock=LOCK_SH)
+
 
 def clean_cache(obj):
     """Shrink cache to its maximum length by closing oldest files."""
@@ -230,7 +240,7 @@ class FileBuffer(object):
     path = False
     fd = -1
     mm = False
-    
+
     def __init__(self, private_cache=False):
         """private_cache: use global FileBuffer.cache and _lock class attributes if False, 
         otherwise instantiated a new private cache and lock"""
@@ -251,7 +261,7 @@ class FileBuffer(object):
         fo.write(' ' * self.meta_len)
         fo.close()
         locker.new(path)
-            
+
     def remap(self, fd, path, lock):
         if fd < 0:
             return False
@@ -260,14 +270,14 @@ class FileBuffer(object):
             locker.lock(path, lock)
         except:
             raise
-        
+
         try:
             # Must re-map each time
             self.mm = mmap.mmap(fd, length=0)
         except:
             locker.unlock(path)
             return False
-        
+
         self.fd = fd
         self.info = self._get_info()
         self.mm.seek(0)
@@ -277,14 +287,14 @@ class FileBuffer(object):
     def fopen(self, path, lock=LOCK_EX):
         """Open a file in path, handling the locking"""
         self._lock.acquire()
-        
+
         fd = self.cache.get(path, -1)
         if self.remap(fd, path, lock):
             return self.mm, self.fd
-        
+
         # Initialize the indexed file, if exclusive lock was required
         # (writing)
-        ex = os.path.exists(path) and os.path.exists(path+'.lk')
+        ex = os.path.exists(path) and os.path.exists(path + '.lk')
         if not ex:
             if lock in [LOCK_EX, LOCK_NBEX]:
                 self.init(path)
@@ -292,14 +302,14 @@ class FileBuffer(object):
                 self._lock.release()
                 raise exceptions.KeyError(
                     'Non-existent FileBuffer for reading: ' + path)
-            
+
         # Lock must precede mmap
         try:
             locker.lock(path, lock)
         except:
             self._lock.release()
             raise
-        
+
         self.path = path
         # Open the file descriptor
         self.fd = os.open(path, flags)
@@ -313,18 +323,20 @@ class FileBuffer(object):
 
         self.info = self._get_info()
         return self.mm, self.fd
-    
+
     @classmethod
     def empty_global_cache(cls):
         """Close all opened files."""
         return clean_cache(cls)
 
-    def close(self, basepath=''):
+    def close(self, basepath='', hard=False):
         for p in self.cache.keys():
             if not p.startswith(basepath):
                 continue
             fd = self.cache.pop(p)
             locker.unlock(p)
+            if hard:
+                locker.clear(p)
             os.close(fd)
         try:
             self._lock.release()
@@ -345,11 +357,12 @@ class FileBuffer(object):
         if self.cache_len <= 0 and self.fd >= 0:
             os.close(self.fd)
             self.fd = -1
-            
+
         try:
             self._lock.release()
         except:
             pass
+
     @property
     def high(self):
         return self.info[0]

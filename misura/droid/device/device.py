@@ -7,7 +7,7 @@ import multiprocessing
 from collections import defaultdict
 
 from misura.canon import milang, option
-from misura.canon.csutil import unlockme, initializeme
+from misura.canon.csutil import unlockme, initializeme, sharedProcessResources
 
 from .. import utils
 from .. import data, share  # needed for share loading in partial imports
@@ -676,8 +676,10 @@ class Device(option.Aggregative, milang.Scriptable, Node):
             self.log.info('Starting acquisition process')
             self.reset_acquisition()
             self.desc.set('running', 1)
-            self.process = multiprocessing.Process(target=self.run_acquisition, args=(
-                zt,), name=self['fullpath'] + 'run_acquisition')
+            self.process = multiprocessing.Process(target=self.run_acquisition, 
+                                                   args=(zt, ), 
+                                                   kwargs={'spr':sharedProcessResources},
+                                                   name=self['fullpath'] + 'run_acquisition')
             self.process.daemon = self._daemon_acquisition_process
             self.process.start()
             self['pid'] = self.process.ident
@@ -711,9 +713,11 @@ class Device(option.Aggregative, milang.Scriptable, Node):
 
     xmlrpc_soft_get = soft_get
 
-    def run_acquisition(self, zerotime, *args):
+    def run_acquisition(self, zerotime, *args, **kwargs):
         """Continously call control_loop.
         """
+        spr = kwargs.get('spr', False)
+        if spr: spr()
         self.isDevice = True
         if self.desc.has_key('zerotime'):
             self['zerotime'] = zerotime

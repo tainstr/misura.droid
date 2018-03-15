@@ -47,7 +47,7 @@ class DirShelf(FileBuffer):
             self.update(desc)
 
     def close(self):
-        FileBuffer.close(self, self.dir)
+        FileBuffer.close(self, self.dir, hard=True)
         if not os.path.exists(self.dir):
             return True
         shutil.rmtree(self.dir)

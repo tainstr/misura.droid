@@ -10,7 +10,7 @@ from datetime import datetime
 from traceback import format_exc
 import functools
 
-from misura.canon.csutil import utime, initializeme
+from misura.canon.csutil import utime, initializeme, sharedProcessResources
 from misura.droid import parameters as params
 from .. version import __version__
 from misura.droid import share
@@ -421,7 +421,8 @@ class Instrument(device.Measurer, device.Device):
         self.log.info('Compiling scripts')
         self.distribute_scripts()
         self.log.debug('Starting supervisor process...')
-        self.process = multiprocessing.Process(target=self.supervisor)
+        self.process = multiprocessing.Process(target=self.supervisor, 
+                                               kwargs={'spr':sharedProcessResources})
         self.process.daemon = self._daemon_acquisition_process
         self.desc.set('running', 1)
         self.process.start()
@@ -776,8 +777,9 @@ class Instrument(device.Measurer, device.Device):
         sleep(.5)
         return True
 
-    def supervisor(self):
+    def supervisor(self, spr=False):
         """Acquisition process for data collection and output file writing"""
+        if spr: spr
         self.log.info('Preparing supervisor', self.root.get(
             'isRunning'), self.isRunning, self.measure['measureFile'])
         if not self.prepare_control_loop():

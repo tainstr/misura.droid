@@ -6,6 +6,7 @@ import unittest
 import pickle
 import multiprocessing
 import exceptions
+from misura.canon import csutil
 from misura.droid import share
 from misura.droid import data
 from misura.droid import utils
@@ -20,14 +21,15 @@ class ShareModule(unittest.TestCase):
         self.assertTrue(share.registered.has_key('Database'))
 
 
-def parallel_dumps(obj):
+def parallel_dumps(obj, spr=False):
     """Dummy func which returns a pickled object"""
+    if spr: spr()
     return pickle.dumps(obj)
 
 
 def parallel_func(obj):
     """Calling parallel_dumps in a separate process"""
-    p = multiprocessing.Process(target=parallel_dumps, args=(obj,))
+    p = multiprocessing.Process(target=parallel_dumps, args=(obj,csutil.sharedProcessResources))
     p.daemon = True
     p.start()
     p.join()
