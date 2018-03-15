@@ -111,7 +111,7 @@ class TestProcessProxy(unittest.TestCase):
         pp._max_restarts = -1
         pp._start(1)
         for i in range(2000):
-            print 'CYCLE',i
+            print('CYCLE',i)
             try:
                 pp._start(1)
             except:

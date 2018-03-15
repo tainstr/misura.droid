@@ -162,8 +162,12 @@ class SharedMemoryLock(object):
         
         
 locker = SharedMemoryLock()
-    
 
+def set_locker(lk):
+    global locker
+    locker = lk
+    
+csutil.sharedProcessResources.register(set_locker, locker)
 
 def exclusive(func, lock=LOCK_EX):
     """Decorator for FileBuffer fopen/fclose management"""

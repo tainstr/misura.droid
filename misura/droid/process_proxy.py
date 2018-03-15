@@ -6,6 +6,7 @@ from time import sleep, time
 from traceback import print_exc, format_exc
 from multiprocessing import Process, Value
 import tempfile
+from misura.canon import csutil
 
 import errno
 import socket
@@ -192,8 +193,10 @@ class ProcessProxy(object):
         self._write_object(pid, result)
         return ret
 
-    def _run(self):
+    def _run(self, spr=False):
         """Execution cycle runs in a separate process"""
+        if spr:
+            spr()
         # Write process pid
         pid = str(os.getpid())
         if os.path.exists(self._input_path):
@@ -242,7 +245,7 @@ class ProcessProxy(object):
         #TODO: user the spawn context in Python3!
         #ctx = multiprocessing.get_context("spawn")
         #ctx.Process(...
-        self._process = Process(target=self._run)
+        self._process = Process(target=self._run, args=(csutil.sharedProcessResources,))
         self._args = args
         self._kwargs = kwargs
         self._process.daemon = True

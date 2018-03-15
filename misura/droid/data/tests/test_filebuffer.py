@@ -9,7 +9,7 @@ from time import time, sleep
 import multiprocessing
 
 #from misura import utils_testing as ut
-
+from misura.canon import csutil
 from misura.droid.data import filebuffer
 
 
@@ -222,25 +222,29 @@ class FileBuffer(unittest.TestCase):
         self.assertEqual(fb.high, 0)
         self.assertEqual(fb.count, 10)
         
-    def stress_write(self, pid, dat='a', dt=10):
+    def stress_write(self, pid, dat='a', dt=10, spr=False):
+        if spr:
+            spr()
         i = 0
         t0=time()
         while time()-t0<dt:
             self.fb.write(p+str(pid), dat)
             #self.fb.get_idx(p+str(pid), 0)
             i+=1
-        v = 1.*i/dt
+        v = 1.*dt/i
         print('W', pid, v)
         self.w_tot.value += v
             
         
-    def stress_read(self, pid, dt=10):
+    def stress_read(self, pid, dt=10, spr=False):
+        if spr:
+            spr()
         i = 0
         t0 = time()
         while time()-t0<dt:
             self.fb.get_idx(p+str(pid), 0)
             i += 1
-        v = 1.*i/dt
+        v = 1.*dt/i
         print('R', pid, v)
         self.r_tot.value += v
     
@@ -257,11 +261,15 @@ class FileBuffer(unittest.TestCase):
         w = []
         r = []
         for i in range(w_concurrency):
-            w.append(multiprocessing.Process(target=self.stress_write, args=(i, data)))      
+            w.append(multiprocessing.Process(target=self.stress_write, 
+                                             args=(i, data),
+                                             kwargs={'spr': csutil.sharedProcessResources}))     
             w[-1].start()
             sleep(0.1)
             for j in range(r_concurrency):
-                r.append( multiprocessing.Process(target=self.stress_read, args=(i, )))
+                r.append( multiprocessing.Process(target=self.stress_read, 
+                                                  args=(i, ), 
+                                                  kwargs={'spr': csutil.sharedProcessResources}))
                 r[-1].start()
                 
         # Stop all
