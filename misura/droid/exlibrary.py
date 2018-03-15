@@ -198,6 +198,7 @@ class Api(object):
         if not log:
             log = logger.BaseLogger()
         self._log = log
+        self._current = {}
 
     def __del__(self):
         self.close()

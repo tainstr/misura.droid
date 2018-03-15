@@ -43,7 +43,11 @@ class SharedMemoryLock(object):
         self.locks = [multiprocessing.Value('i') for i in self.free]
     
     def _read(self, path):
-        idx = int(open(path+'.lk', 'rb').read())
+        try:
+            idx = int(open(path+'.lk', 'rb').read())
+        except:
+            print_exc()
+            return -1
         self.cache[path] = idx
         if idx in self.free:
             self.free.remove(idx) 
