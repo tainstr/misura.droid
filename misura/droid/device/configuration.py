@@ -6,10 +6,9 @@ import inspect
 import functools
 from twisted.web import xmlrpc
 
-
 from misura.canon import logger
 from misura.canon import csutil
-from misura.canon.csutil import sanitize,  xmlrpcSanitize, func_args
+from misura.canon.csutil import sanitize, xmlrpcSanitize, func_args
 from ..utils import listDirExt
 from .. import parameters as params
 
@@ -111,7 +110,7 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
     """Conf class towards which this class acts as a ConfigurationInterface."""
     main_confdir = params.confdir
     """Base server configuration directory"""
-    conf_def = [{"handle": 'mro', "name": 'Class hierarchy', "type": 'List', "attr": ['ReadOnly','Hidden']},
+    conf_def = [{"handle": 'mro', "name": 'Class hierarchy', "type": 'List', "attr": ['ReadOnly', 'Hidden']},
                 {"handle": 'log', "name": 'Log',
                     "type": 'Log', "attr": ['History']},
                 ]
@@ -132,69 +131,111 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
         self.desc = desc
         self.log = logger.SubLogger(self)
 
-        ######
-        # data.Conf method routing (self.desc)
-        self.keys = self.desc.keys
-        self.get_preset = self.desc.get_preset
-        self.sete = self.desc.sete
-        self.getattr = self.desc.getattr
-        self.setattr = self.desc.setattr
-        self.getkid = self.desc.getkid
-        self.gettype = self.desc.gettype
-        self.has_key = self.desc.has_key
-        self.listPresets = self.desc.listPresets
-        self.updateCurrent = self.desc.updateCurrent
-        self.update = self.desc.update
-        self.fp = self.desc.fp
-        self.iolist = self.desc.iolist
-        self.get_from_preset = self.desc.get_from_preset
-        self.compare_presets = self.desc.compare_presets
-        self.set_to_preset = self.desc.set_to_preset
+    def keys(self, *a, **k): return self.desc.keys(*a, **k)
 
-        ######
-        # Direct publication
-        # TODO: SECURITY CHECKS! readLevel,writeLevel, etc...
-        self.xmlrpc_has_key = self.desc.has_key
-        self.xmlrpc_keys = self.desc.keys
-        self.xmlrpc_getattr = self.getattr
-        self.xmlrpc_setattr = self.setattr
-        self.xmlrpc_getkid = sanitize(self.desc.getkid)
-        self.xmlrpc_applyDesc = self.applyDesc
-        self.xmlrpc_listPresets = self.desc.listPresets
-        self.save = self.desc.save
-        self.xmlrpc_save = self.desc.save
-        self.remove = self.desc.remove
-        self.xmlrpc_remove = self.desc.remove  # config. file
-        self.rename = self.desc.rename
-        self.xmlrpc_rename = self.desc.rename
-        self.delete = self.desc.delete
-        self.xmlrpc_delete = self.desc.delete  # key
-        self.xmlrpc_h_get = sanitize(self.desc.h_get)
-        self.xmlrpc_h_get_time = sanitize(self.desc.h_get_time)
-        self.xmlrpc_getAttributes = sanitize(self.desc.getAttributes)
-        self.xmlrpc_iolist = self.iolist
-        self.xmlrpc_get_from_preset = self.get_from_preset
-        self.xmlrpc_compare_presets = self.compare_presets
-        self.xmlrpc_set_to_preset = self.set_to_preset
-        # History methods
-        self.h_get = self.desc.h_get
-        self.h_get_history = self.desc.h_get_history
-        self.h_get_time = self.desc.h_get_time
-        self.h_clear = self.desc.h_clear
-        self.h_time_at = self.desc.h_time_at
-        self.xmlrpc_h_time_at = self.h_time_at
+    def get_preset(self, *a, **k): return self.desc.get_preset(*a, **k)
 
-        ######
-        # Mediated publication
-        self.xmlrpc___getitem__ = sanitize(self.xmlrpc_get)
-        self.xmlrpc___setitem__ = sanitize(self.xmlrpc_set)
-        self.xmlrpc_setFlags = sanitize(self.setFlags)
-        self.xmlrpc_getFlags = sanitize(self.getFlags)
-        self.xmlrpc___contains__ = self.desc.has_key
-        self.xmlrpc___hash__ = self.__hash__
-        self.xmlrpc___eq__ = self.__eq__
-        self.xmlrpc___repr__ = self.desc.__repr__
-        self.xmlrpc___str__ = self.__str__
+    def sete(self, *a, **k): return self.desc.sete(*a, **k)
+
+    def getattr(self, *a, **k): return self.desc.getattr(*a, **k)
+
+    def setattr(self, *a, **k): return self.desc.setattr(*a, **k)
+
+    def getkid(self, *a, **k): return self.desc.getkid(*a, **k)
+
+    def gettype(self, *a, **k): return self.desc.gettype(*a, **k)
+
+    def has_key(self, *a, **k): return self.desc.has_key(*a, **k)
+
+    def listPresets(self, *a, **k): return self.desc.listPresets(*a, **k)
+
+    def updateCurrent(self, *a, **k): return self.desc.updateCurrent(*a, **k)
+
+    def update(self, *a, **k): return self.desc.update(*a, **k)
+
+    def fp(self, *a, **k): return self.desc.fp(*a, **k)
+
+    def iolist(self, *a, **k): return self.desc.iolist(*a, **k)
+
+    def get_from_preset(self, *a, **k): return self.desc.get_from_preset(*a, **k)
+
+    def compare_presets(self, *a, **k): return self.desc.compare_presets(*a, **k)
+
+    def set_to_preset(self, *a, **k): return self.desc.set_to_preset(*a, **k)
+
+    def xmlrpc_has_key(self, *a, **k): return self.desc.has_key(*a, **k)
+
+    def xmlrpc_keys(self, *a, **k): return self.desc.keys(*a, **k)
+
+    def xmlrpc_getattr(self, *a, **k): return self.getattr(*a, **k)
+
+    def xmlrpc_setattr(self, *a, **k): return self.setattr(*a, **k)
+
+    def xmlrpc_getkid(self, *a, **k): return sanitize(self.desc.getkid)(*a, **k)
+
+    def xmlrpc_applyDesc(self, *a, **k): return self.applyDesc(*a, **k)
+
+    def xmlrpc_listPresets(self, *a, **k): return self.desc.listPresets(*a, **k)
+
+    def save(self, *a, **k): return self.desc.save(*a, **k)
+
+    def xmlrpc_save(self, *a, **k): return self.desc.save(*a, **k)
+
+    def remove(self, *a, **k): return self.desc.remove(*a, **k)
+
+    def xmlrpc_remove(self, *a, **k): return self.desc.remove  # config. file(*a, **k)
+
+    def rename(self, *a, **k): return self.desc.rename(*a, **k)
+
+    def xmlrpc_rename(self, *a, **k): return self.desc.rename(*a, **k)
+
+    def delete(self, *a, **k): return self.desc.delete(*a, **k)
+
+    def xmlrpc_delete(self, *a, **k): return self.desc.delete  # key(*a, **k)
+
+    def xmlrpc_h_get(self, *a, **k): return sanitize(self.desc.h_get)(*a, **k)
+
+    def xmlrpc_h_get_time(self, *a, **k): return sanitize(self.desc.h_get_time)(*a, **k)
+
+    def xmlrpc_getAttributes(self, *a, **k): return sanitize(self.desc.getAttributes)(*a, **k)
+
+    def xmlrpc_iolist(self, *a, **k): return self.iolist(*a, **k)
+
+    def xmlrpc_get_from_preset(self, *a, **k): return self.get_from_preset(*a, **k)
+
+    def xmlrpc_compare_presets(self, *a, **k): return self.compare_presets(*a, **k)
+
+    def xmlrpc_set_to_preset(self, *a, **k): return self.set_to_preset(*a, **k)
+
+    def h_get(self, *a, **k): return self.desc.h_get(*a, **k)
+
+    def h_get_history(self, *a, **k): return self.desc.h_get_history(*a, **k)
+
+    def h_get_time(self, *a, **k): return self.desc.h_get_time(*a, **k)
+
+    def h_clear(self, *a, **k): return self.desc.h_clear(*a, **k)
+
+    def h_time_at(self, *a, **k): return self.desc.h_time_at(*a, **k)
+
+    def xmlrpc_h_time_at(self, *a, **k): return self.h_time_at(*a, **k)
+
+    def xmlrpc___getitem__(self, *a, **k): return sanitize(self.xmlrpc_get)(*a, **k)
+
+    def xmlrpc___setitem__(self, *a, **k): return sanitize(self.xmlrpc_set)(*a, **k)
+
+    def xmlrpc_setFlags(self, *a, **k): return sanitize(self.setFlags)(*a, **k)
+
+    def xmlrpc_getFlags(self, *a, **k): return sanitize(self.getFlags)(*a, **k)
+
+    def xmlrpc___contains__(self, *a, **k): return self.desc.has_key(*a, **k)
+
+    def xmlrpc___hash__(self, *a, **k): return self.__hash__(*a, **k)
+
+    def xmlrpc___eq__(self, *a, **k): return self.__eq__(*a, **k)
+
+    def xmlrpc___repr__(self, *a, **k): return self.desc.__repr__(*a, **k)
+
+    def xmlrpc___str__(self, *a, **k): return self.__str__(*a, **k)
 
     # Must explicitly define these functions.
     # Cannot assign them to self during __init__
@@ -210,6 +251,7 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
     def getcontrols(self):
         """Returns currently defined controls"""
         return self.controls.keys()
+
     xmlrpc_getcontrols = getcontrols
 
     def close(self):
@@ -226,6 +268,7 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
 
     def classname(self):
         return self.class_name
+
     xmlrpc_classname = classname
 
     def mro(self):
@@ -307,19 +350,20 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
                 continue
             out[path] = d.rmodel()
         return out
+
     xmlrpc_rmodel = rmodel
 
     @classmethod
     def _pget(cls, key, self):
         """Helper function for getting a class-defined property"""
-        #print 'PGET', type(self), key # this works!
+        # print 'PGET', type(self), key # this works!
         return self.get(key)
 
     @classmethod
     def _pset(cls, key, self, val):
         """Helper function for setting a class-defined property"""
         # FIXME: pset does not work!
-        #print 'PSET', type(self), key, val
+        # print 'PSET', type(self), key, val
         return self.set(key, val)
 
     @classmethod
@@ -342,8 +386,7 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
             self.applyDesc()
         return r
 
-
-    def applyDesc(self,  *a,  **k):
+    def applyDesc(self, *a, **k):
         """To be reimplemented."""
         return True
 
@@ -355,18 +398,18 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
 
     def setAttributes(self, name, attrlist, writeLevel=5):
         return self.desc.setAttributes(name, attrlist)
+
     xmlrpc_setAttributes = setAttributes
     
     def add_attr(self, opt, attr_name, writeLevel=5):
         return self.desc.add_attr(opt, attr_name)
+
     xmlrpc_add_attr = add_attr
     
     def del_attr(self, opt, attr_name, writeLevel=5):
         return self.desc.del_attr(opt, attr_name)
+
     xmplrpc_del_attr = del_attr
-    
-    
-    
 
     def getFlags(self, opt):
         """Returns option flags for `opt`"""
@@ -494,6 +537,7 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
         for opt in opts:
             r[opt] = self.xmlrpc_get(opt, readLevel=readLevel)
         return r
+
     xmlrpc_multiget = sanitize(multiget)
 
     @sanitize
@@ -538,7 +582,7 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
 
     # FIXME: SET SHOULD RETURN NVAL, not (name,nval)!!!
     # Change client-side where needed
-    def set(self, name,  val, t=-1, kwopt={}):
+    def set(self, name, val, t=-1, kwopt={}):
         """Set routing.
         First searches for a set_`name` method to call.
         Then searches for a control `name`.
@@ -634,6 +678,7 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
     def getConf_dir(self):
         """Return the folder where the configuration should be saved."""
         return self.desc.getConf_dir()
+
     conf_dir = property(getConf_dir, setConf_dir)
 
     def setConf_obj(self, obj):
@@ -643,6 +688,7 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
     def getConf_obj(self):
         """Return the output full path for current configuration."""
         return self.desc.getConf_obj()
+
     conf_obj = property(getConf_obj, setConf_obj)
 
     @sanitize
@@ -652,16 +698,19 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
         r = 'Welcome {}. \nYour role is: read={},{} / write={},{}.\nHere is your echo: {}'.format(
             userName, readLevel, l[readLevel], writeLevel, l[writeLevel], s)
         return r
+
     xmlrpc_echo = echo
 
     def check_read(self, opt, readLevel=0):
         """Check if option `opt` can be red by current user"""
         return self.getattr(opt, 'readLevel') <= readLevel
+
     xmlrpc_check_read = check_read
 
     def check_write(self, opt, writeLevel=0):
         """Check if option `opt` can be written by current user"""
         return self.getattr(opt, 'writeLevel') <= writeLevel
+
     xmlrpc_check_write = check_write
 
 
@@ -675,6 +724,7 @@ def select_preset_for_name(name, available_presets):
 
     return selected_preset
 
+
 def presets_from_name(name):
     if not name:
         return []
@@ -682,6 +732,6 @@ def presets_from_name(name):
     presets = [name]
 
     for underscore_index in underscore_indexes:
-        presets.append(name[underscore_index+1:])
+        presets.append(name[underscore_index + 1:])
 
     return presets

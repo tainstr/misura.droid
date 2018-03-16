@@ -25,12 +25,21 @@ class Conf(PersistentConf):
         self.kid_base = str(id(self))
         self.log = logger.SubLogger(self)
         self.db = share.database
-        # History funcs
-        self.h_get = self.desc.h_get
-        self.h_time_at = self.desc.h_time_at
-        self.h_get_time = self.desc.h_get_time
-        self.h_get_history = self.desc.h_get_history
-        self.h_clear = self.desc.h_clear
+    
+    def h_get(self, *a, **k):
+        return self.desc.h_get(*a,**k)
+    
+    def h_time_at(self, *a, **k):
+        return self.desc.h_time_at(*a, **k)
+    
+    def h_get_time(self, *a, **k):
+        return self.desc.h_get_time(*a, **k)
+    def h_get_history(self, *a, **k):
+        return self.desc.h_get_history(*a, **k)
+    def h_clear(self, *a, **k):
+        return self.desc.h_clear(*a, **k)
+        
+    
 
     def close(self):
         print 'Conf.close', self.desc
