@@ -271,6 +271,7 @@ class FileBuffer(unittest.TestCase):
             w[-1].start()
             sleep(0.1)
             for j in range(r_concurrency):
+                break
                 r.append( multiprocessing.Process(target=self.stress_read, 
                                                   name='Read{}-{}'.format(i,j),
                                                   args=(i, ), 

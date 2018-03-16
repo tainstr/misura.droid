@@ -67,7 +67,7 @@ class SharedMemoryLock(object):
     def unlock(self, path):
         """Set `path` to unlocked"""
         idx = self._idx(path)
-        self.locks[idx].value = LOCK_UN
+        self.locks[idx].value = LOCK_UN 
         return True
 
     def lock(self, path, value=LOCK_EX, timeout=-1):
@@ -80,19 +80,26 @@ class SharedMemoryLock(object):
 
         idx = self._idx(path)
         lk = self.locks[idx]
-        if lk.value == LOCK_FR:
+        self._lock(path, value, idx, lk, timeout=timeout)
+        lk.get_lock().release()
+        lk.value = value
+        return True
+        
+    def _lock(self, path, value, idx, lk, timeout=-1):
+        lk.get_lock().acquire()
+        old = lk.value
+        if old == LOCK_FR:
+            #FIXME: WHY????
             if value == LOCK_EX:
-                lk.value = value
                 return True
-            print('Cannot lock unassigned address', idx, path)
-            raise exceptions.MemoryError('FileBuffer lock address is unassigned {} {} {}'.format(idx,
+            lk.get_lock().release()
+            raise exceptions.MemoryError('FileBuffer lock address is unassigned {} {} {} {}'.format(idx,
                                                                                                  path,
-                                                                                                 lk.value))
-            return False
+                                                                                                 old,
+                                                                                                 value))
 
         # If unlocked, apply right away
-        if lk.value == LOCK_UN:
-            self.locks[idx].value = value
+        if old == LOCK_UN:
             return True
 
         if timeout < 0:
@@ -104,30 +111,34 @@ class SharedMemoryLock(object):
             value /= 2
 
         # Can overlock with shared
-        if lk.value == value == LOCK_SH:
+        if old == value == LOCK_SH:
             return True
 
         # Wait for exclusive lock to go away
         # Or a shared lock if we are trying to get an exclusive lock
         t0 = -1
-        while (not nonblock) and (lk.value == LOCK_EX or (value == LOCK_EX and lk.value == LOCK_SH)):
+        while (not nonblock) and (old == LOCK_EX or (value == LOCK_EX and lk.value == LOCK_SH)):
+            lk.get_lock().release()
             if t0 < 0:
                 t0 = time()
             elif time() - t0 > timeout:
                 break
             sleep(random() * 0.001)
-        if t0 > 0:
-            print('SharedMemoryLock.lock WAITED', time() - t0, path, value)
+            # Apply lock
+            lk.get_lock().acquire()
+            if old == LOCK_UN or (value==LOCK_SH==lk.value):
+                if t0 > 0:
+                    print('SharedMemoryLock.lock WAITED', time() - t0, path, value)
+                return True
+        print('SharedMemoryLock.lock TIMEOUT', time() - t0, path, value)
         # Cannot lock anyway with exclusive
-        if lk.value == LOCK_EX:
+        if old == LOCK_EX:
             raise exceptions.MemoryError(
                 'FileBuffer is ex-locked {} {} {}'.format(idx, path, value))
-        if value == LOCK_EX and lk.value == LOCK_SH:
+        if value == LOCK_EX and old == LOCK_SH:
             raise exceptions.MemoryError(
                 'FileBuffer is sh-locked, cannot ex-lock {} {} {}'.format(idx, path, value))
-        # Apply lock
-        self.locks[idx].value = value
-        return True
+        raise exceptions.MemoryError('Undetermined error while locking', idx, path, value, old)
 
     def refresh(self):
         """Refresh free addresses set"""
@@ -142,6 +153,7 @@ class SharedMemoryLock(object):
     def new(self, path):
         """Init a new lock on `path`"""
         idx = -1
+        
         while len(self.free):
             idx0 = self.free.pop()
             # Should stop immediately unless parallel process reserved
@@ -153,8 +165,8 @@ class SharedMemoryLock(object):
             self.refresh()
             # Repeat
             return self.new(path)
-        self.cache[path] = idx
         self.locks[idx].value = LOCK_UN
+        self.cache[path] = idx
         fo = open(path + '.lk', 'wb')
         fo.write(str(idx))
         fo.close()
