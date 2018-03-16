@@ -13,9 +13,9 @@ print 'Importing', __name__
 def setUpModule():
     print 'Starting', __name__
 
-dspath = '/dev/shm/misura/test'
+dspath = '/dev/shm/misura_test/test'
 if os.name=='nt':
-    dspath='C:\\dev\\shm\\misura\\test'
+    dspath='C:\\dev\\shm\\misura_test\\test'
 
 class TestRefUpdater(unittest.TestCase):
 

@@ -37,6 +37,7 @@ class ReferenceUpdater(object):
             self.reset(outfile, zerotime)
             
     def restore_lock(self, lk):
+        print('ReferenceUpdater.restore_lock')
         self._lock=lk
         
     def __getstate__(self):
@@ -128,7 +129,12 @@ class ReferenceUpdater(object):
             return False
         path = os.path.join(dirname, 'self')
         # if History is not specified, exclude this path from further sync
-        opt = self.main_buffer.get_meta(path)
+        try:
+            opt = self.main_buffer.get_meta(path)
+        except:
+            print_exc()
+            self.exclude.add(path)
+            return False
         attr = opt.get('attr', [])
         if opt['type'] == 'RoleIO':
             lk = opt['options']
@@ -277,7 +283,6 @@ class ReferenceUpdater(object):
             lastt = ref.mtime
         elems = []
         try:
-            #           mt=os.stat(path).st_mtime # not reliable for mmapped files!
             # Lock the file with low-level fopen()
             fbuffer.fopen(path, LOCK_SH)
             mt = fbuffer.mtime  # real last mod

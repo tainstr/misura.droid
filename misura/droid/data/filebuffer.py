@@ -82,17 +82,18 @@ class SharedMemoryLock(object):
         idx = self._idx(path)
         lk = self.locks[idx]
         self._lock(path, value, idx, lk, timeout=timeout)
-        lk.get_lock().release()
         lk.value = value
+        try:
+            lk.get_lock().release()
+        except:
+            pass 
         return True
         
     def _lock(self, path, value, idx, lk, timeout=-1):
+        # On successful result, lock should remain acquired
         lk.get_lock().acquire()
         old = lk.value
         if old == LOCK_FR:
-            #FIXME: WHY????
-            if value == LOCK_EX:
-                return True
             lk.get_lock().release()
             raise exceptions.MemoryError('FileBuffer lock address is unassigned {} {} {} {}'.format(idx,
                                                                                                  path,
@@ -118,28 +119,48 @@ class SharedMemoryLock(object):
         # Wait for exclusive lock to go away
         # Or a shared lock if we are trying to get an exclusive lock
         t0 = -1
-        while (not nonblock) and (old == LOCK_EX or (value == LOCK_EX and lk.value == LOCK_SH)):
+        while (not nonblock) and (lk.value == LOCK_EX or (value == LOCK_EX and lk.value == LOCK_SH)):
             lk.get_lock().release()
             if t0 < 0:
                 t0 = time()
             elif time() - t0 > timeout:
                 break
-            sleep(random() * 0.001)
-            # Apply lock
+            sleep(random() * 0.002)
+            # Recover lock
             lk.get_lock().acquire()
-            if old == LOCK_UN or (value==LOCK_SH==lk.value):
+            if lk.value == LOCK_UN or (value==LOCK_SH==lk.value):
                 if t0 > 0:
                     print('SharedMemoryLock.lock WAITED', time() - t0, path, value)
                 return True
-        print('SharedMemoryLock.lock TIMEOUT', time() - t0, path, value)
+        
+        old = lk.value
+        print('SharedMemoryLock.lock TIMEOUT', time() - t0, path, value, old)
+        
+        try: 
+            lk.get_lock().release()
+        except:
+            print_exc()
+            
         # Cannot lock anyway with exclusive
         if old == LOCK_EX:
+            if nonblock:
+                return False
             raise exceptions.MemoryError(
-                'FileBuffer is ex-locked {} {} {}'.format(idx, path, value))
+                'FileBuffer is ex-locked {} {} {}'.format(idx, 
+                                                          path, 
+                                                          value))
         if value == LOCK_EX and old == LOCK_SH:
+            if nonblock:
+                return False
             raise exceptions.MemoryError(
-                'FileBuffer is sh-locked, cannot ex-lock {} {} {}'.format(idx, path, value))
-        raise exceptions.MemoryError('Undetermined error while locking', idx, path, value, old)
+                'FileBuffer is sh-locked, cannot ex-lock {} {}'.format(idx, 
+                                                                          path))
+        if nonblock:
+            return False
+        raise exceptions.MemoryError('Undetermined error while locking {} {} {} {}'.format(idx, 
+                                                                                           path, 
+                                                                                           value, 
+                                                                                           old))
 
     def refresh(self):
         """Refresh free addresses set"""
