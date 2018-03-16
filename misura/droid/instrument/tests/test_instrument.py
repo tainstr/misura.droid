@@ -3,7 +3,7 @@
 import unittest
 import tables
 from tables.nodes import filenode
-from pickle import loads
+from pickle import loads,dumps
 
 from misura.canon.option import ao
 from misura.canon import csutil
@@ -40,6 +40,7 @@ class InstrumentSetup(unittest.TestCase):
         self.root = server.BaseServer(share.SharingManager())
         storage.Storage(parent=self.root)  
         self.obj = instrument.Instrument(self.root, 'instrument')
+        dumps(self.obj)
         self.obj.outFile = False
         # Create a device server with some sub-devices
         self.dsrv = device.DeviceServer(self.root, 'dsrv')

@@ -85,6 +85,20 @@ class Device(option.Aggregative, milang.Scriptable, Node):
             self['name'] = self['devpath']
         self._lock = multiprocessing.Lock()
         self.desc.setKeep_names(['locked'])
+        sharedProcessResources.register(self.restore_lock, self._lock)
+
+    def restore_lock(self, lock):
+        print('Device.restore_lock')
+        self._lock = lock
+        
+    def __getstate__(self):
+        result = self.__dict__.copy()
+        result.pop('_lock')
+        return result
+    
+    def __setstate__(self, result):
+        self.__dict__ = result
+        self._lock = multiprocessing.Lock()
 
     def xmlrpc___nonzero__(self):
         return True

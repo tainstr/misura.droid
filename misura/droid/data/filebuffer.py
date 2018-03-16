@@ -17,6 +17,7 @@ from misura.canon import csutil
 
 from misura.droid import utils
 from __builtin__ import False
+from misura.canon.csutil import sharedProcessResources
 
 isWindows = os.name == 'nt'
 
@@ -183,14 +184,12 @@ class SharedMemoryLock(object):
 
 locker = SharedMemoryLock()
 
-
-def set_locker(lk):
+def restore_locker(lk):
     global locker
     print('Restoring filebuffer.locker',multiprocessing.current_process().pid, lk.name, locker.name)
     locker = lk
 
-
-csutil.sharedProcessResources.register(set_locker, locker)
+csutil.sharedProcessResources.register(restore_locker, locker)
 
 
 def exclusive(func, lock=LOCK_EX):
@@ -263,7 +262,18 @@ class FileBuffer(object):
         if private_cache:
             self._lock = multiprocessing.Lock()
             self.cache = {}
-
+        else:
+            sharedProcessResources.register(self.restore_lock, self._lock)
+        
+    def restore_lock(self, lock):
+        self._lock = lock
+        
+    def __getstate__(self):
+        result = self.__dict__.copy()
+        if '_lock' in result:
+            result.pop('_lock')
+        return result
+    
     def init(self, path):
         """Initialize a storage file"""
         d = os.path.dirname(path)

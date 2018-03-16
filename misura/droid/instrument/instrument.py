@@ -17,6 +17,7 @@ from misura.droid import share
 from misura.droid import device
 from measure import Measure
 from sample import Sample
+from cPickle import dumps
 
 
 def isRunning(func):
@@ -779,7 +780,7 @@ class Instrument(device.Measurer, device.Device):
 
     def supervisor(self, spr=False):
         """Acquisition process for data collection and output file writing"""
-        if spr: spr
+        if spr: spr()
         self.log.info('Preparing supervisor', self.root.get(
             'isRunning'), self.isRunning, self.measure['measureFile'])
         if not self.prepare_control_loop():

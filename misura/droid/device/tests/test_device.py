@@ -8,6 +8,7 @@ from misura.canon.option import ao
 from misura.droid import device
 
 from misura.droid.data.tests import testdir
+from cPickle import dumps
 
 print 'Importing', __name__
 
@@ -21,6 +22,9 @@ class Device(unittest.TestCase):
     def setUp(self):
         self.nodp = device.Device()
         self.dp = device.Device()
+
+    def test_dump(self):
+        dumps(self.nodp)
 
     @unittest.skip('')
     def test_model(self):

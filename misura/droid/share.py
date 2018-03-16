@@ -7,7 +7,7 @@ import os
 from time import sleep
 import multiprocessing
 
-from misura.canon import indexer, logger
+from misura.canon import indexer, logger, csutil
 import data
 import parameters as params
 import process_proxy
@@ -72,6 +72,13 @@ class DummyManager(object):
     def __init__(self, *a, **kw):
         for name, cls in registered.iteritems():
             self.register(name, cls)
+            
+    def __getstate__(self):
+        r = self.__dict__.copy()
+        return r
+    
+    def __setstate__(self, s):
+        self.__dict__ = s
 
     def __getattr__(self, key):
         global registered
@@ -176,7 +183,7 @@ def set_dbpath():
     if size > 1:
         comm.bcast(dbpath, root=0)
         print 'BROADCASTING DATABASE PATHS', rank, dbpath
-    print 'share.dbpath', dbpath
+    print('share.dbpath', dbpath)
 
 set_dbpath()
 
@@ -192,10 +199,17 @@ class ClassThatDeletesSharedMemoryWhenGarbageCollected():
 
 dont_garbage_collect_me_manually = ClassThatDeletesSharedMemoryWhenGarbageCollected()
 
+def restore_globals(**names):
+    print('RESTORE GLOBALS', names.keys())
+    g = globals()
+    for k, v in names.iteritems():
+        g[k] = v
+    
+
 
 def init(connect=False, authkey='misura', port=0, log_filename=params.log_filename):
     """Initialize global variables. Must be called only by main module."""
-    global manager, database
+    global manager, database, cache
     set_dbpath()
     print 'empty FileBuffer cache', len(data.FileBuffer.cache)
     data.FileBuffer.empty_global_cache()
@@ -232,6 +246,11 @@ def init(connect=False, authkey='misura', port=0, log_filename=params.log_filena
     print 're-opening database', dbpath, params.log_filename
     database = manager.Database(dbpath, log_filename=log_filename)
     print 'share.init() DONE'
+    csutil.sharedProcessResources.register(restore_globals, 
+                                           dbpath=dbpath,
+                                           database=database,
+                                           manager=manager,
+                                           cache=cache)
     return manager
 
 import weakref
@@ -321,4 +340,6 @@ database = data.Database(dbpath)
 
 main_confdir = params.confdir
 
-print 'SHARE IMPORTED'
+print('SHARE IMPORTED')
+
+

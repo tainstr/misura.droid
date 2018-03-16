@@ -3,16 +3,21 @@
 import unittest
 import os
 from nose.tools import assert_equals
-
+from pickle import dumps
+from misura.droid import data
 from misura.droid.device import configuration
 
-@unittest.skip('FIX ME!!!')
+
 class ConfigurationInterface(unittest.TestCase):
 
     def setUp(self):
         self.cf = data.Conf()
-        self.ci = device.ConfigurationInterface(self.cf)
-
+        self.ci = configuration.ConfigurationInterface(self.cf)
+        
+    def test_dump(self):
+        dumps(self.ci)
+    
+    @unittest.skip('FIX ME!!!')
     def test_validate_preset_name(self):
         self.ci.setConf_dir('/tmp')
         self.ci.save('default')

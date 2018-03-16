@@ -8,7 +8,7 @@ import threading
 import numpy as np
 
 from misura.canon import reference
-from misura.canon.csutil import lockme
+from misura.canon.csutil import lockme, sharedProcessResources
 from filebuffer import FileBuffer, LOCK_SH
 
 # TODO: Evaluate inotifyx for more efficient scan!
@@ -27,6 +27,7 @@ class ReferenceUpdater(object):
     def __init__(self, base, outfile=False, zerotime=0):
         self.base = base
         self._lock = threading.Lock()
+        sharedProcessResources.register(self.restore_lock, self._lock)
         self.pool = []
         self.callback_result = []
         if not self.nthreads:
@@ -34,6 +35,18 @@ class ReferenceUpdater(object):
         # Direct initialization
         if outfile:
             self.reset(outfile, zerotime)
+            
+    def restore_lock(self, lk):
+        self._lock=lk
+        
+    def __getstate__(self):
+        r = self.__dict__.copy()
+        r.pop('_lock')
+        return r
+    
+    def __setstate__(self, s):
+        self.__dict__ = s 
+        self._lock = threading.Lock()
 
     def close(self):
         """Stop threaded operations and commit latest results"""

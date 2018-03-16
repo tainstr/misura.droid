@@ -14,6 +14,7 @@ from misura.droid.data import filebuffer
 
 
 from misura.droid import utils
+from cPickle import dumps
 
 
 dr = '/dev/shm/misura_test/fb/'
@@ -30,6 +31,9 @@ class FileBuffer(unittest.TestCase):
         self.fb.close()
         if os.path.exists(dr):
             shutil.rmtree(dr)
+            
+    def test_dump(self):
+        dumps(self.fb)
 
     def test_fopen_fclose(self):
         fb = self.fb
@@ -155,6 +159,7 @@ class FileBuffer(unittest.TestCase):
         lastt3 = fb.get_idx(p, lasti)[0]
         self.assertEqual(lastt3, lastt)
         # The last point must be the same
+        sleep(0.1)
         self.assertEqual(fb.idx(
             lasti), fb.idx(-1), msg="Last time does not return to last idx {}".format(lasti))
         self.assertEqual(lasti, fb.idx_entries - 1)
@@ -252,7 +257,7 @@ class FileBuffer(unittest.TestCase):
     
     def test_performance(self):
         self.fb.idx_entries = 2
-        data = 'a'*int(1e3)
+        data = 'a'*int(1e4)
         self.w_tot = multiprocessing.Value('f')
         self.w_tot.value = 0
         self.r_tot = multiprocessing.Value('f')
@@ -271,7 +276,7 @@ class FileBuffer(unittest.TestCase):
             w[-1].start()
             sleep(0.1)
             for j in range(r_concurrency):
-                break
+                
                 r.append( multiprocessing.Process(target=self.stress_read, 
                                                   name='Read{}-{}'.format(i,j),
                                                   args=(i, ), 
@@ -282,8 +287,9 @@ class FileBuffer(unittest.TestCase):
         j = lambda p: p.join()
         map(j, w)
         map(j, r)
-        self.assertGreater(self.r_tot.value, 0)
         print('TOT', self.w_tot.value+self.r_tot.value, self.w_tot.value, self.r_tot.value)
+        self.assertGreater(self.r_tot.value, 0)
+        
         
 
 

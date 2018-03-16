@@ -6,6 +6,7 @@ from misura.droid.data import refupdater, dirshelf
 from misura.canon.option import Option
 from misura.canon.indexer import SharedFile
 from time import time, sleep
+from cPickle import dumps
 print 'Importing', __name__
 
 
@@ -32,6 +33,10 @@ class TestRefUpdater(unittest.TestCase):
         self.sh.close()
         self.ru.close()
         self.ds.close()
+        
+    @unittest.skip('Maybe not needed')
+    def test_dump(self):
+        dumps(self.ru)
 
     def changeval(self, nval):
         print 'CHANGEVAL', nval

@@ -13,6 +13,7 @@ from misura.droid import data
 from misura.canon import option
 
 from . import testdir
+from cPickle import dumps
 rd = np.random.random
 
 c1 = testdir + 'Conf.csv'
@@ -49,6 +50,9 @@ class Conf(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.cfd)
+        
+    def test_dump(self):
+        dumps(self.cf)
 
     def test_merge_desc(self):
         self.cf.save('default')

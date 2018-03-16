@@ -5,6 +5,7 @@ import unittest
 from time import time
 
 from misura.droid.data import dirshelf
+from cPickle import dumps
 
 props = {'a': {'handle': 'a', 'type': 'Object', 'current': [1, 2]}}
 
@@ -16,6 +17,9 @@ class DirShelf(unittest.TestCase):
 
     def tearDown(self):
         self.d.close()
+        
+    def test_dump(self):
+        dumps(self.d)
 
     def test_update(self):
         d = self.d

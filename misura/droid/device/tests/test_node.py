@@ -7,6 +7,7 @@ from misura.canon.option import ao
 from misura.droid import device
 from misura.droid import parameters as params
 from . import testdir
+from cPickle import dumps
 
 # Need to import data in order to register Conf obj
 
@@ -37,6 +38,11 @@ class Node(unittest.TestCase):
         self.subA.sete('name', name.copy())
         self.sub2 = device.Node(parent=self.sub, node='sub2')
         self.sub2.sete('name', name.copy())
+    
+    def test_dump(self):
+        dumps(self.root)
+        dumps(self.sub)
+        dumps(self.sub2)
 
     def test_parent(self):
         self.assertIs(self.sub.parent(), self.root)
