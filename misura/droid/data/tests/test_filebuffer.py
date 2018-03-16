@@ -225,13 +225,14 @@ class FileBuffer(unittest.TestCase):
     def stress_write(self, pid, dat='a', dt=10, spr=False):
         if spr:
             spr()
+        assert filebuffer.locker.locks[1000].value==9, filebuffer.locker.locks[1000].value
         i = 0
         t0=time()
         while time()-t0<dt:
             self.fb.write(p+str(pid), dat)
             #self.fb.get_idx(p+str(pid), 0)
             i+=1
-        v = 1.*dt/i
+        v = 1000.*dt/i
         print('W', pid, v)
         self.w_tot.value += v
             
@@ -239,12 +240,13 @@ class FileBuffer(unittest.TestCase):
     def stress_read(self, pid, dt=10, spr=False):
         if spr:
             spr()
+        assert filebuffer.locker.locks[1000].value==9, filebuffer.locker.locks[1000].value
         i = 0
         t0 = time()
         while time()-t0<dt:
             self.fb.get_idx(p+str(pid), 0)
             i += 1
-        v = 1.*dt/i
+        v = 1000.*dt/i
         print('R', pid, v)
         self.r_tot.value += v
     
@@ -260,14 +262,17 @@ class FileBuffer(unittest.TestCase):
         r_concurrency = 2
         w = []
         r = []
+        filebuffer.locker.locks[1000].value=9
         for i in range(w_concurrency):
             w.append(multiprocessing.Process(target=self.stress_write, 
+                                             name='Write{}'.format(i),
                                              args=(i, data),
                                              kwargs={'spr': csutil.sharedProcessResources}))     
             w[-1].start()
             sleep(0.1)
             for j in range(r_concurrency):
                 r.append( multiprocessing.Process(target=self.stress_read, 
+                                                  name='Read{}-{}'.format(i,j),
                                                   args=(i, ), 
                                                   kwargs={'spr': csutil.sharedProcessResources}))
                 r[-1].start()
@@ -276,7 +281,7 @@ class FileBuffer(unittest.TestCase):
         j = lambda p: p.join()
         map(j, w)
         map(j, r)
-            
+        self.assertGreater(self.r_tot.value, 0)
         print('TOT', self.w_tot.value+self.r_tot.value, self.w_tot.value, self.r_tot.value)
         
 

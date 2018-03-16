@@ -38,8 +38,9 @@ class SharedMemoryLock(object):
     """In-memory registry for file locking statuses.
     Makes file-locking fast and fully cross-platform."""
     timeout = 5
-
+    
     def __init__(self, N=10000):
+        self.name = '{}-{}'.format(multiprocessing.current_process().pid, random())
         self.cache = {}
         self.free = set(range(N))
         # 0=free address, 1=unlocked, 2=locked
@@ -119,9 +120,11 @@ class SharedMemoryLock(object):
             print('SharedMemoryLock.lock WAITED', time() - t0, path, value)
         # Cannot lock anyway with exclusive
         if lk.value == LOCK_EX:
-            print('FileBuffer was exclusively locked', idx, path, value)
             raise exceptions.MemoryError(
-                'FileBuffer was exclusivly locked {} {} {}'.format(idx, path, value))
+                'FileBuffer is ex-locked {} {} {}'.format(idx, path, value))
+        if value == LOCK_EX and lk.value == LOCK_SH:
+            raise exceptions.MemoryError(
+                'FileBuffer is sh-locked, cannot ex-lock {} {} {}'.format(idx, path, value))
         # Apply lock
         self.locks[idx].value = value
         return True
@@ -171,6 +174,7 @@ locker = SharedMemoryLock()
 
 def set_locker(lk):
     global locker
+    print('Restoring filebuffer.locker',multiprocessing.current_process().pid, lk.name, locker.name)
     locker = lk
 
 
