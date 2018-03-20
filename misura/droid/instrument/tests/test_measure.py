@@ -29,8 +29,17 @@ class Measure(unittest.TestCase):
         self.instruments = instruments
         
         self.ins.outFile = self.stor
+        
+        
+    @classmethod
+    def setUpClass(cls):
+        super(Measure, cls).setUpClass()
         utils.time_scaled.value = 1
         
+    @classmethod
+    def tearDownClass(cls):
+        super(Measure, cls).tearDownClass()
+        utils.time_scaled.value = 0
         
     def test_elapsed(self):
         measure = self.instruments['']

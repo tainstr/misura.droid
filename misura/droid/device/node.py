@@ -70,6 +70,15 @@ class Node(ConfigurationInterface):
         if self.root is None:
             return self
         return self.root
+    
+    @property
+    def root_isRunning(self):
+        """Shortcut for accessing the isRunning option on object root."""
+        if not self.root_obj:
+            return False
+        if not self.root_obj.has_key('isRunning'):
+            return False
+        return self.root_obj['isRunning']
 
     def __init__(self, parent=None, node='node'):
         """Tree-aware"""
