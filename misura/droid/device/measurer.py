@@ -17,7 +17,7 @@ class Measurer(object):
     def set_nSamples(self, n):
         """Set the number of samples in the current measurement. 
         Creates a Role option for each sample."""
-        if self.root is not None and self.root['isRunning']:
+        if self.root_isRunning:
             self.log.error(
                 'Cannot change number of samples while running acquisition.')
             return None

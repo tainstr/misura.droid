@@ -256,7 +256,7 @@ class Serial(UDevice):
         while True:
             w = self.com.inWaiting()
             if w == 0:
-                if time() - t > timeout:
+                if time() - t > timeout and len(red)<minlen:
                     self.readerror = (30, 'Serial.read: timeout, minlen={}, red={}'.format(minlen, len(red)))
                     self.log.debug(self.readerror[1])
                     break

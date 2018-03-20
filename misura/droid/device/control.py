@@ -99,7 +99,7 @@ class Calibrator(Control):
         # Create new function
         m,t = [],[]
         map(lambda v: (m.append(v[0]), t.append(v[1])), cal)
-        self.parent.log.debug('Reacreating calibration_func', self.handle, deg, m, t)
+        self.parent.log.debug('Recreating calibration_func', self.handle, deg, m, t)
         factors = np.polyfit(m, t, deg = deg)
         self._calibration_func = np.poly1d(factors)
         return self._calibration_func
@@ -128,7 +128,7 @@ class Calibrator(Control):
         # Create new function
         m,t = [],[]
         map(lambda v: (m.append(v[0]), t.append(v[1])), cal)
-        self.parent.log.debug('Reacreating inverse_func', self.handle, deg, m, t)
+        self.parent.log.debug('Recreating inverse_func', self.handle, deg, m, t)
         factors = np.polyfit(t, m, deg = deg)
         self._inverse_func = np.poly1d(factors)
         return self._inverse_func

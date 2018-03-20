@@ -88,7 +88,6 @@ class Device(option.Aggregative, milang.Scriptable, Node):
         sharedProcessResources.register(self.restore_lock, self._lock)
 
     def restore_lock(self, lock):
-        print('Device.restore_lock')
         self._lock = lock
         
     def __getstate__(self):

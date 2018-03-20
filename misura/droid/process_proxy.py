@@ -317,7 +317,8 @@ class ProcessProxy(object):
         except IOError, e:
             if e.errno != errno.EINTR:
                 s.close()
-                self._sockets.pop(pid)
+                if pid in self._sockets:
+                    self._sockets.pop(pid)
                 raise
             # Retry the operation
             self._log.debug('_procedure_call retry on EINTR', packet, format_exc())
