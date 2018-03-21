@@ -30,10 +30,13 @@ ssl_private_key = pkg_resources.resource_filename(
     'misura.droid.server', 'privkey.pem')
 ssl_cacert = pkg_resources.resource_filename(
     'misura.droid.server', 'cacert.pem')
+version_file = pkg_resources.resource_filename(
+    'misura.droid', 'VERSION')
 params.ssl_enabled = params.ssl_enabled and os.path.exists(
     ssl_private_key) and os.path.exists(ssl_cacert)
 params.ssl_private_key = ssl_private_key
 params.ssl_cacert = ssl_cacert
+params.version_file = version_file
 
 
 class UsersChecker:

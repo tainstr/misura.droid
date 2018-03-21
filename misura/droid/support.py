@@ -103,6 +103,8 @@ class Support(device.Device):
             "type": 'String', 'attr': ['ReadOnly'], "parent":'version'},
         {"handle": u'versionDate', "name": u'Last applied package date',
             "type": 'String', 'attr': ['ReadOnly'], "parent":'version'},
+        {"handle": u'versionString', "name": u'Extended version string',
+            "type": 'TextArea', 'attr': ['ReadOnly'], "parent":'version'},
         {"handle": u'libs', "name": u'Loaded libraries info',
             "type": 'Button'},
         {"handle": u'env', "name": u'Environment variables', "type": 'Button'},
@@ -152,6 +154,8 @@ class Support(device.Device):
         self.post_connection()
         self.set_stopUI(self['stopUI'])
         self.vmstat()
+        if os.path.exists(params.version_file):
+            self['versionString'] = open(params.version_file, 'r').read()
 
             
     def set_stopUI(self, val):
