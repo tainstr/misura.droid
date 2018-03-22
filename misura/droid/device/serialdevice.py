@@ -217,7 +217,6 @@ class Serial(UDevice):
         except serial.SerialException:
             self.connect_baudrate()
             self.writeerror = (30, 'Cannot open serial port for write')
-            raise
         # Written the whole message
         if n == len(msg):
             return True
