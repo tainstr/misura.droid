@@ -46,6 +46,7 @@ def determine_path(root=__file__):
 home = os.path.expanduser("~") + sep
 mdir = determine_path()  # Executable path
 mdir += sep
+
 misuraServerExe = os.path.join(mdir, 'MisuraServer.pyc')
 baseStorageDir = os.path.join(home, 'storage', '')  # Config+Data
 baseTmpDir = os.path.join(rootdir, 'tmp', 'misura', '')
@@ -98,12 +99,13 @@ cameraCaps = {'default': {'format': 'video/x-raw-rgb', 'width': 640, 'height': 4
               # Logitech C910
               'UVC Camera (046d:0821)': {'format': 'video/x-raw-yuv', 'width': 2048, 'height': 1536},
               # Logitech C310
-              'UVC Camera (046d:081b)': {'format': 'video/x-raw-yuv', 'width': 1280, 'height': 960}
+              'UVC Camera (046d:081b)': {'format': 'video/x-raw-yuv', 'width': 1280, 'height': 960},
               #     'UVC Camera (046d:0821)':{'format':'video/x-raw-yuv', 'width':1920, 'height':1080}
+              'Integrated_Webcam_HD': {'format': 'video/x-raw-rgb', 'width': 1280, 'height': 720},
               }
 
 
-forbiddenID = []#['Laptop_Integrated_Webcam_3M']
+forbiddenID = []#['Laptop_Integrated_Webcam_3M', 'Integrated_Webcam_HD']
 
 # SERIAL DEVICES
 max_serial_scan = 5
@@ -124,6 +126,7 @@ from multiprocessing import Value
 # openssl req -new -x509 -sha512 -key privkey.pem -out cacert.pem -days 0
 ssl_private_key = ''
 ssl_cacert = ''
+version_file = ''
 try:
     ssl_private_key = os.path.join(mdir,'server','privkey.pem') 
     #pkg_resources.resource_filename('misura.droid.server', 'privkey.pem')
