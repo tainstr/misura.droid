@@ -20,7 +20,7 @@ from __builtin__ import False
 from misura.canon.csutil import sharedProcessResources
 
 isWindows = os.name == 'nt'
-
+LOCKS_CACHE = 25000
 LOCK_FR = 0
 LOCK_UN = 1
 
@@ -40,7 +40,7 @@ class SharedMemoryLock(object):
     Makes file-locking fast and fully cross-platform."""
     timeout = 5
     
-    def __init__(self, N=10000):
+    def __init__(self, N=LOCKS_CACHE):
         self.name = '{}-{}'.format(multiprocessing.current_process().pid, random())
         self.cache = {}
         self.free = set(range(N))
