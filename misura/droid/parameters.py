@@ -94,15 +94,8 @@ MIN = 10 ** -10
 multisample_processing_pool = True
 netusbcam = False +1
 xiapi = False # +1
-video4linux = False  #+1
-cameraCaps = {'default': {'format': 'video/x-raw-rgb', 'width': 640, 'height': 480},
-              # Logitech C910
-              'UVC Camera (046d:0821)': {'format': 'video/x-raw-yuv', 'width': 2048, 'height': 1536},
-              # Logitech C310
-              'UVC Camera (046d:081b)': {'format': 'video/x-raw-yuv', 'width': 1280, 'height': 960},
-              #     'UVC Camera (046d:0821)':{'format':'video/x-raw-yuv', 'width':1920, 'height':1080}
-              'Integrated_Webcam_HD': {'format': 'video/x-raw-rgb', 'width': 1280, 'height': 720},
-              }
+video4linux = False  +1
+
 
 
 forbiddenID = []#['Laptop_Integrated_Webcam_3M', 'Integrated_Webcam_HD']
