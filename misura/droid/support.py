@@ -108,6 +108,7 @@ class Support(device.Device):
         {"handle": u'libs', "name": u'Loaded libraries info',
             "type": 'Button'},
         {"handle": u'env', "name": u'Environment variables', "type": 'Button'},
+        {"handle": u'dmesg', "name": u'System logs', "type": 'TextArea'},
 
         # Network
         {"handle": u'network',
@@ -317,6 +318,12 @@ class Support(device.Device):
             return 'unsupported'
         r = go('env')
         return r[1]
+    
+    def get_dmesg(self):
+        if os.name=='nt':
+            return 'NotImplemented'
+        s, out = go('dmesg')
+        return out
 
     def get_network(self):
         """Apply network configuration"""
