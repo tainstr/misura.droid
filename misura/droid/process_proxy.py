@@ -33,7 +33,9 @@ class ProcessProxy(object):
     _max_restarts = 100
     _timestamp = -1
 
-    def __init__(self, cls, base_path=base_path, exit_on_exception=False):
+    def __init__(self, cls, base_path=base_path, 
+                 exit_on_exception=False,
+                 max_restarts=100):
         """Acts as a proxy to a remote instance of `cls`
         which will be created in a parallel process upon ProcessProxy.start().
         All calls to ProcessProxy methods not starting with '_' will be redirected to the remote object.
@@ -57,6 +59,7 @@ class ProcessProxy(object):
         self._log = share.FileBufferLogger()
         self._restarts = Value('i')
         self._restarts.value = 0
+        self._max_restart = max_restarts
 
     def _do_set_logging(self, log_path, owner='ProcessProxy'):
         self._log_path = log_path
@@ -200,14 +203,15 @@ class ProcessProxy(object):
             os.remove(self._input_path)
         s = self._server_socket('input', 1000, timeout=self._timeout)
         # Create served instance
-        self._log.debug('Class parameters', self._cls.__name__, self._args, self._kwargs)
+        self._log.debug('Class parameters', pid, self._pid_path, self._cls.__name__, 
+                        self._args, self._kwargs)
         self._instance = self._cls(*self._args, **self._kwargs)
         data = b''
         go = True
         open(self._pid_path, 'w').write(pid)
         while go:
             if not os.path.exists(self._pid_path):
-                self._log.debug( 'ProcessProxy terminated by deletion:', self._pid_path)
+                self._log.debug( 'ProcessProxy terminated by deletion:', pid, self._pid_path)
                 break
             try:
                 conn, addr = s.accept()
@@ -276,6 +280,7 @@ class ProcessProxy(object):
         except:
             print_exc()
         self._process = None
+        print('ProcessProxy: DONE STOPPING', self._pid_path)
         return r
 
     def _is_alive(self):
@@ -300,7 +305,7 @@ class ProcessProxy(object):
                 self._log.critical('ProcessProxy died too many times. Giving up', self._max_restarts, self._pid_path)
                 raise RuntimeError('ProcessProxy died too many times. Giving up.', self._max_restarts)
             if method!='put_log':
-                self._log.debug('_procedure_call restarting underlying process', self._restarts.value)
+                self._log.debug('_procedure_call restarting underlying process', self._restarts.value, self._max_restarts)
             self._start(*self._args, **self._kwargs)
             self._restarts.value+=1
         # Combine PID and thread ID
@@ -345,16 +350,20 @@ class ProcessProxy(object):
 
 class ProcessProxyInstantiator(object):
 
-    def __init__(self, cls, base_path='/tmp/misura', exit_on_exception=False):
+    def __init__(self, cls, base_path='/tmp/misura', 
+                 exit_on_exception=False, 
+                 max_restarts=ProcessProxy._max_restarts):
         self.cls = cls
         self.base_path = base_path
         self.instance = None
         self.exit_on_exception = exit_on_exception
+        self.max_restarts = max_restarts
 
     def __call__(self, *args, **kwargs):
         self.instance = ProcessProxy(self.cls,
                                      base_path=self.base_path,
-                                     exit_on_exception=self.exit_on_exception)
+                                     exit_on_exception=self.exit_on_exception,
+                                     max_restarts=self.max_restarts)
         self.instance._start(*args, **kwargs)
         return self.instance
 

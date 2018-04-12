@@ -38,8 +38,7 @@ conf = [
 
     # anerr(Consecutive Analysis Errors)
     {"handle": 'anerr', "name": 'Consecutive Errors',
-        "current": 0, "min": 0, "type": 'Integer', "attr": ['History', 'ReadOnly', 'Runtime'], 
-        "readLevel":4, "priority": 0},
+        "current": 0, "min": 0, "type": 'Integer', "attr": ['History', 'ReadOnly', 'Runtime'],  "priority": 0},
     {"handle": 'maxErr',
         "name": 'Maximum number of errors before aborting acquisition.',
         "current": 50, "readLevel": 3,
