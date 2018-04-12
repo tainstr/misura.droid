@@ -150,10 +150,15 @@ class ProcessProxy(object):
         return self._sockets[name]
 
     def _write_object(self, name, obj):
-        s = self._client_socket(name)
+        try:
+            s = self._client_socket(name)
+        except:
+            print('Error connecting to client socket', format_exc())
+            return False
         data = dumps(obj, HIGHEST_PROTOCOL) + sep
         s.sendall(data)
         s.close()
+        return True
 
     def _read_socket(self, s, timeout=3):
         data = b''
@@ -165,14 +170,6 @@ class ProcessProxy(object):
             obj = loads(data[:-len(sep)])
             return obj
         raise BaseException('_read_socket timeout')
-
-    def _read_object(self, name, timeout=-1):
-        if timeout<0:
-            timeout=self._timeout
-        s = self._client_socket(name)
-        r = self._read_socket(s, timeout=timeout)
-        s.close()
-        return r
 
     def _process_packet(self, packet):
         pid, method_name, args, kwargs = loads(packet)
@@ -311,7 +308,9 @@ class ProcessProxy(object):
         packet = (pid, method, args, kwargs)
         # Start listening on reply socket named as caller pid
         s = self._server_socket(pid, timeout=self._timeout)
-        self._write_object('input', packet)
+        w = self._write_object('input', packet)
+        if not w:
+            raise RuntimeError('ProcessProxy cannot call remote process: '+method)
         try:
             conn, addr = s.accept()
         except IOError, e:
