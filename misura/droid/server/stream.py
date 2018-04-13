@@ -126,9 +126,10 @@ class MisuraDirectory(resource.Resource):
         opt = request.args.get('opt', [False])[0]
         filename = request.args.get('filename', [False])[0]
         data = request.args.get('data', [False])[0]
+        overwrite = request.args.get('overwrite', [False])[0]
         if False in (opt, filename, data):
             return False
-        return opt, filename, data
+        return opt, filename, data, overwrite
 
     def render_POST(self, request):
         """Allows uploads via chunked post requests.
@@ -136,17 +137,22 @@ class MisuraDirectory(resource.Resource):
         r = self.check_POST(request)
         if r is False:
             return 'Invalid POST request'
-        opt, filename, data = r
+        opt, filename, data, overwrite = r
         if len(data) == 0:
             return 'No data for POST request'
         while '..' in filename:
             filename = filename.replace('..', '.')
         filename = filename.replace('/', '_')
         filename = os.path.join(self.obj.desc.getConf_dir(), opt, filename)
-        print 'Writing file:', filename
-        f = open(filename, 'ab+')
-        # TODO: should lock files to avoid conflicts
-        f.seek(0, 2)
+        
+        if overwrite:
+            print 'Overwriting file:', filename
+            f = open(filename, 'wb') 
+        else:
+            print 'Appending file:', filename
+            f = open(filename, 'ab+')
+            # TODO: should lock files to avoid conflicts
+            f.seek(0, 2)
         r0 = f.tell()
         f.write(data)
         f.seek(0, 2)

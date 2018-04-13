@@ -89,13 +89,8 @@ class Support(device.Device):
             "type": 'FileList', 'attr': ['Runtime']},
         {"handle": u'applyExe', "name": u'Apply selected software version',
             "type": 'Button', "parent": 'packages'},
-        {"handle": u'upgrade', "name": u'Download new software version',
-            "type": 'Button', "parent": 'packages'},
-        {"handle": u'upgradeUrl', "name": u'Upgrade site',
-            "type": 'String', "parent": 'packages'},
         {"handle": u'upgradeProgress', "name": u'Upgrade/restore progress',
             "type": 'Progress', "attr": ['Runtime']},
-
         # System info
         {"handle": u'version', "name": u'Misura version',
             "type": 'String', 'attr': ['ReadOnly']},
