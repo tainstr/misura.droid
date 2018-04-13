@@ -47,7 +47,7 @@ def parse_vmstat():
         vm[key] = val
     return vm
 
-tar_log_limit = 1e6
+tar_log_limit = 1000000
 
 def get_today_string():
     return datetime.datetime.now().strftime("%Y_%m_%d_%H-%M-%S")
@@ -165,7 +165,8 @@ class Support(device.Device):
     """Exclude files from configuration backup."""
 
     # excl_exe='--exclude "*.py"'
-    excl_exe = '--exclude "*.h5" --exclude "*/tests/storage/*" --exclude "*/.svn/*"'
+    excl_exe = '--exclude "*.h5" --exclude "*/tests/storage/*" --exclude "*/.svn/*" --exclude "*/.git/*" \
+--exclude "*/opencv/*" --exclude "*/misura.client/*" --exclude "*/veusz/*" --exclude "*/misura.doc/*"'
     """Exclude files from exe backups"""
 
     def do_backup(self, source, odir, excl='', outfile=False, overwrite=False):
