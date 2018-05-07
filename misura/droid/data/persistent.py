@@ -279,6 +279,9 @@ class PersistentConf(option.Conf):
             self.log.error('Preset does not exist: cannot save into', preset_path)
             return False
         store = option.CsvStore(preset_path)
+        if opt not in store.desc:
+            self.log.error('Option does not exist in preset:', opt, preset_path)
+            return False
         store.desc[opt][attr] = val
         self.preset_cache[preset] = store.desc
         store.write_file()
