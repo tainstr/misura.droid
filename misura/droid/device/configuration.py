@@ -391,10 +391,10 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
         return True
 
     def validate_preset_name(self, name):
-        return select_preset_for_name(name, self.listPresets())
-
-    def getattr(self, name, attr):
-        return self.desc.gete(name)[attr]
+        lst = self.listPresets()
+        ret = select_preset_for_name(name, self.listPresets())
+        self.log.debug('validate_preset_name', name, ret, lst)
+        return ret
 
     def setAttributes(self, name, attrlist, writeLevel=5):
         return self.desc.setAttributes(name, attrlist)

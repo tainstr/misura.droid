@@ -521,7 +521,7 @@ class Device(option.Aggregative, milang.Scriptable, Node):
             for dev in self.devices:
                 dev.init_instrument(name)
         self.log.info(
-            'Initialized instrument:', name, self['name'], self['devpath'])
+            'Initialized instrument:', name, self['name'], self['devpath'], preset, self['preset'])
         return True
 
     xmlrpc_init_instrument = init_instrument
@@ -739,7 +739,7 @@ class Device(option.Aggregative, milang.Scriptable, Node):
                     self.log.debug('Control loop returned False')
                     break
             except:
-                self.log.error('control_loop exception', format_exc)
+                self.log.error('control_loop exception', format_exc())
                 break
             if self.desc.get('running') != 1:
                 self.log.debug('Exited from running state')
