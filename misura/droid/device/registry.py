@@ -4,7 +4,6 @@ from multiprocessing import Lock
 from copy import deepcopy
 
 from misura.canon.csutil import lockme
-from ..data import DirShelf
 from .. import share
 
 
@@ -30,6 +29,7 @@ class DevicePathRegistry(object):
     _lock = Lock()
 
     def __init__(self):
+        from ..data import DirShelf
         self.shelf = DirShelf(share.dbpath, 'reg')
         # Do not record chronology (must be set *before* calling update())
         self.shelf.idx_entries = 1
