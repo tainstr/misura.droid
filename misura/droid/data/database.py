@@ -14,7 +14,6 @@ from dirshelf import DirShelf
 class Database(object):
     out = False
     """Buffering object for data output"""
-
     def __init__(self, dbpath, log_format='%(levelname)s:%(asctime)s%(message)s', log_filename=False):
         # Clean the path before setting it
         self.dbpath = dbpath
@@ -31,6 +30,9 @@ class Database(object):
         """Latest log lines"""
         self.nlog = 0
         """Current log index"""
+        self.main_logger = False
+        self.log_filename = False
+        self.log_format = log_format
         self.set_logger(log_format, log_filename=log_filename)
 
     def set_logger(self, log_format='%(levelname)s:%(asctime)s%(message)s', log_filename=False):
@@ -53,13 +55,15 @@ class Database(object):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        for k in ['main_logger', 'formatter', 'log_filename', 'log_format']:
+        for k in ['main_logger', 'formatter']:
             if d.has_key(k):
                 del d[k]
         return d
 
     def __setstate__(self, state):
-        self.set_logger(state['log_format'], state['log_filename'])
+        map(lambda a: setattr(self, *a), state.items())
+        if 'log_filename' in state and 'log_format' in state:
+            self.set_logger(state['log_format'], state['log_filename'])
 
     def addFileHandler(self, filename, max_dim=2 * 10**6, backups=10):
         """Adds logrotate logging"""
@@ -110,6 +114,6 @@ class Database(object):
         """General, short-memory logging"""
         t, st, p, o, msg, pmsg = logger.formatMsg(*msg, **po)
         self.log_buf.append([t, p, o, pmsg])
-        self.main_logger.log(p, pmsg)
         self.nlog += 1
+        self.main_logger.log(p, pmsg)
         return p, msg

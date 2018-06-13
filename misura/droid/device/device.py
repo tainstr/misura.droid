@@ -96,7 +96,7 @@ class Device(option.Aggregative, milang.Scriptable, Node):
         return result
     
     def __setstate__(self, result):
-        self.__dict__ = result
+        map(lambda a: setattr(self, *a), result.items())
         self._lock = multiprocessing.Lock()
 
     def xmlrpc___nonzero__(self):

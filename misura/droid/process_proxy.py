@@ -100,14 +100,16 @@ class ProcessProxy(object):
         return result
 
     def __setstate__(self, state):
-        self.__dict__ = state
+        map(lambda a: setattr(self, *a), state.items())
         self._sockets = {}
         self._process = None
         self._unpickled = True
         from misura.droid import share
-        self._log = share.FileBufferLogger()
         self._restarts = Value('i')
-        self._restarts.value = 0        
+        self._restarts.value = 0
+        self._log = share.FileBufferLogger()
+        if self._log_path:
+            self._do_set_logging(self._log_path, self._log_owner)  
 
     def __del__(self):
         self._max_restarts = -1
@@ -376,6 +378,7 @@ class ProcessProxyManager(object):
     _registry = {}
     _base_path = '/tmp/misura'
     _deleted = False
+    instantiators = ()
     
     def __init__(self, *args, **kwargs):
         """Compatibility layer between ProcessProxy and multiprocessing managers"""

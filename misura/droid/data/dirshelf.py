@@ -50,9 +50,10 @@ class DirShelf(FileBuffer):
         FileBuffer.close(self, self.dir, hard=True)
         if not os.path.exists(self.dir):
             return True
-        shutil.rmtree(self.dir)
+        shutil.rmtree(self.dir, ignore_errors=True)
         # Recreate the directory to avoid future name conflicts
-        os.mkdir(self.dir)
+        if not os.path.exists(self.dir):
+            os.mkdir(self.dir)
         return True
 
     # FIXME: this should be removed.

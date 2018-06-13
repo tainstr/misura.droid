@@ -12,6 +12,7 @@ from misura.droid import storage
 from misura.droid import data
 from misura.droid.data.tests import testdir
 from misura.droid import process_proxy
+from cPickle import dumps, loads
 rd = np.random.random
 
 
@@ -21,7 +22,7 @@ print 'Importing ' + __name__
 def setUpModule():
     print 'Starting ' + __name__
 
-m4file = testdir + 'hsm_test.h5'
+m4file = os.path.join(testdir, 'hsm_test.h5')
 
 
 class FileServer(unittest.TestCase):
@@ -67,22 +68,25 @@ class Storage(unittest.TestCase):
 
     def setUp(self):
         self.store = storage.Storage(path=testdir)
-        b = testdir + 'upload/'
+        b = os.path.join(testdir, 'upload', '')
         if not os.path.exists(b):
             os.makedirs(b)
         for f in os.listdir(b):
-            os.remove(b + f)
+            os.remove(os.path.join(b,f))
 
     def tearDown(self):
         self.store.close()
+        
+    def test_dump(self):
+        loads(dumps(self.store))
 
     def test_new_path(self):
         fn, sid, uid = self.store.new_path('upload', 'blabla')
-        self.assertEqual(fn, self.store.path + 'upload/blabla.h5')
+        self.assertEqual(fn, os.path.join(self.store.path + 'upload' , 'blabla.h5'))
         self.assertEqual(sid, 'blabla')
         fn1, sid1, uid1 = self.store.new_path('upload', 'blabla')
         self.assertEqual(sid1, 'blabla_2')
-        self.assertEqual(fn1, self.store.path + 'upload/blabla_2.h5')
+        self.assertEqual(fn1, os.path.join(self.store.path + 'upload', 'blabla_2.h5'))
         self.assertNotEqual(uid, uid1)
 
     def test_new(self):
@@ -91,12 +95,12 @@ class Storage(unittest.TestCase):
         f = self.store.new('upload', 'blabla')
         self.assertIsInstance(f, process_proxy.ProcessProxy)
         self.assertEquals(f._cls, data.outfile.OutputFile)
-        self.assertEqual(f.get_path(), self.store.path + 'upload/blabla.h5')
+        self.assertEqual(f.get_path(), os.path.join(self.store.path + 'upload', 'blabla.h5'))
         f.close()
     
     @unittest.skip('')
     def test_4_upload(self):
-        fp = testdir + 'hsm_test.h5'
+        fp = os.path.join(testdir, 'hsm_test.h5')
         csutil.chunked_upload(self.store.upload, fp)
 
     def test_diskUsage(self):

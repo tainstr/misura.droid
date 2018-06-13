@@ -19,7 +19,6 @@ from measure import Measure
 from sample import Sample
 from cPickle import dumps
 
-
 def isRunning(func):
     """Is running? decorator. Immediately return False if test is no longer running, or true if this is a device."""
     @functools.wraps(func)
@@ -422,7 +421,7 @@ class Instrument(device.Measurer, device.Device):
         self.log.info('Compiling scripts')
         self.distribute_scripts()
         self.log.debug('Starting supervisor process...')
-        self.process = multiprocessing.Process(target=self.supervisor, 
+        self.process = multiprocessing.Process(target=self.supervisor,
                                                kwargs={'spr':sharedProcessResources})
         self.process.daemon = self._daemon_acquisition_process
         self.desc.set('running', 1)

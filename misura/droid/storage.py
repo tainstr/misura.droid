@@ -224,7 +224,7 @@ class Storage(device.Device, indexer.Indexer):
             self.path = self.root.main_datadir
 
         indexer.Indexer.__init__(self,
-                                 dbPath=self.path + 'misura.sqlite',
+                                 dbPath=os.path.join(self.path, 'misura.sqlite'),
                                  paths=[self.path],
                                  log=self.log)
         self.test = FileServer(self)
@@ -350,11 +350,9 @@ class Storage(device.Device, indexer.Indexer):
         else:
             # nome unico per il file a partire dal numero di file nella
             # cartella
-            dirpath = self.path + instrument + '/'
+            dirpath = os.path.join(self.path, instrument, '')
             if sub:
-                dirpath += sub + '/'
-        if not dirpath.endswith('/'):
-            dirpath += '/'
+                dirpath = os.path.join(dirpath, sub, '')
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
         n = len(os.listdir(dirpath))  # numero di file
@@ -363,13 +361,13 @@ class Storage(device.Device, indexer.Indexer):
             sn = self.root.get('eq_sn')  # serial number
         uid = hashlib.md5('%s_%.2f_%i' % (sn, time(), n)).hexdigest()
         sid = shortname
-        fn = dirpath + sid + params.ext  # 1.h5, 2.h5, etc...
+        fn = os.path.join(dirpath, sid + params.ext)  # 1.h5, 2.h5, etc...
         n = 1
         while os.path.exists(fn):
             n += 1
             uid = hashlib.md5('%s_%.2f_%i' % (sn, time(), n)).hexdigest()
             sid = shortname + '_' + str(n)
-            fn = dirpath + sid + params.ext
+            fn = os.path.join(dirpath, sid + params.ext)
         # Touch the file
         open(fn, 'w').close()
         return fn, sid, uid

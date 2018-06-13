@@ -1,3 +1,3 @@
 from misura.canon import determine_path
-
-testdir = determine_path(__file__)+'/data/'  # Executable path
+import os 
+testdir = os.path.join(determine_path(__file__), 'data', '')  # Executable path

@@ -46,7 +46,7 @@ class ReferenceUpdater(object):
         return r
     
     def __setstate__(self, s):
-        self.__dict__ = s 
+        map(lambda a: setattr(self, *a), s.items())
         self._lock = threading.Lock()
 
     def close(self):

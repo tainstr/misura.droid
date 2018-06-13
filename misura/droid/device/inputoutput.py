@@ -24,10 +24,18 @@ class InputOutput(xmlrpc.XMLRPC):
         '''Is an input option? (Readable)'''
         self.output = True
         '''Is an output option? (Write-able)'''
-        self.get = lambda: self.dev.get(self.handle)
-        self.soft_get = lambda: self.dev.soft_get(self.handle)
-        self.set = lambda val: self.dev.set(self.handle, val)
-        self.xmlrpc_set = self.set
+        
+    def get(self):
+        return self.dev.get(self.handle)
+    
+    def soft_get(self):
+        return self.dev.soft_get(self.handle)
+    
+    def set(self, val):
+        return self.dev.set(self.handle, val)
+    
+    def xmlrpc_set(self, *a, **k):
+        return self.set(*a, **k)
 
     def __str__(self):
         s = "InputOutput for %s by %s" % (self.handle, self.dev['name'])
