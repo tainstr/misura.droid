@@ -7,6 +7,7 @@ import os
 import sys
 import multiprocessing
 import pkg_resources
+from traceback import print_exc
 
 from twisted.internet import defer, ssl
 from twisted.web import xmlrpc, server, static
@@ -268,8 +269,10 @@ def run(noname=False, misuraServerExe=params.misuraServerExe):
         reactor, site, main, port=r['-p'] + share.rank, logf=main.log.info)
     reactor.run(installSignalHandlers=1)
     # Stop remaining spares processes
-    stop()
-    utils.apply_time_delta(main.time_delta)
+    try:
+        stop()
+    except:
+        print_exc()
     # TODO: shell command to apply a time delta!
     if main.restart:
         args = sys.argv[1:]

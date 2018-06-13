@@ -139,9 +139,11 @@ class BaseServer(device.Device):
                         and auto_shutdown_interval >= 300 \
                         and last_client_access_time > 0 \
                         and not test_in_progress \
-                        and not self['delayStart']
+                        and not self['delayStart'] \
+                        and not self.time_delta
 
         if client_inactive:
+            self.log.debug('Client inactive: halting server.')
             self.support.get_halt()
 
         if not ins:

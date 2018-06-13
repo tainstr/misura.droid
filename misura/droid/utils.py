@@ -181,7 +181,7 @@ def get_history(buf, start_time=False):
 def apply_time_delta(delta):
     """Change hardware clock by `delta` seconds"""
     if delta < 1:
-        return False
+        return 'no time delta'
     print('APPLY TIME DELTA',delta)
     ago = ''
     if delta<0:
@@ -190,8 +190,9 @@ def apply_time_delta(delta):
     cmd = "date -s '{} seconds {}'".format(delta, ago)
     r=go(cmd)
     # Sync to hardware clock for next reboot
-    r1 = go("sudo hwclock --systohc")
+    r1 = go("sudo hwclock --systohc --update-drift")
     print('apply_time_delta',cmd,r,r1)
+    return 'apply_time_delta {} {} {}'.format(cmd,r,r1)
 
 avahi = False
 dbus = False

@@ -6,7 +6,7 @@
 import xmlrpclib
 import os
 import importlib
-from traceback import format_exc
+from traceback import format_exc, print_exc
 from multiprocessing import Lock, Process, Value
 from multiprocessing.managers import BaseProxy
 from time import time, sleep
@@ -272,8 +272,8 @@ class MainServer(BaseServer):
     def restart(self, after=1, init_instrument=False, writeLevel=5, userName='unknown'):
         if after < 1:
             after = 1
-        self.shutdown(
-            after=after, restart=True, init_instrument=init_instrument, writeLevel=writeLevel, userName=userName)
+        self.shutdown(after=after, restart=True, init_instrument=init_instrument, 
+                      writeLevel=writeLevel, userName=userName)
         return 'Restarting in %i seconds' % after
     xmlrpc_restart = restart
 
@@ -302,18 +302,27 @@ class MainServer(BaseServer):
             msg = 'RESTART'
         self.log.critical(
             '%s in %.1f seconds requested by user "%s"' % (msg, after, userName))
-        from twisted.internet import reactor
-
+        
+        utils.apply_time_delta(self.time_delta)
+        
         def stop():
-            print 'Closing everything'
-            self.close()
+            from twisted.internet import reactor
+            #print 'Closing everything'
+            #try:
+            #    self.close()
+            #except:
+            #    print_exc()
             print 'Stopping share'
-            share.stop()
-            share.close_sparse_objects()
+            try:
+                share.stop()
+                share.close_sparse_objects()
+            except:
+                print_exc()
             print 'Stopping reactor'
             reactor.stop()
         task.deferLater(reactor, after, stop)
         return 'Stopping scheduled in %.1f second.' % after
+        
     xmlrpc_shutdown = shutdown
 
     def _syncRender(self, request, function, args, kwargs):
