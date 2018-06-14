@@ -243,6 +243,7 @@ def clean_cache(obj):
         # remove and close the first inserted item
         oldp, oldfd = obj.cache.popitem(False)
         os.close(oldfd)
+    locker.refresh()
     return i
 
 
@@ -380,11 +381,13 @@ class FileBuffer(object):
         for p in self.cache.keys():
             if not p.startswith(basepath):
                 continue
-            fd = self.cache.pop(p)
-            locker.unlock(p)
-            if hard:
-                locker.clear(p)
-            os.close(fd)
+            # Rely on locker.refresh and clean_cache
+            # immediate deletion might cause freezes!
+            #locker.unlock(p)
+            #if hard:
+            #    locker.clear(p)
+            #fd = self.cache.pop(p)
+            #os.close(fd)
         try:
             self._lock.release()
         except:

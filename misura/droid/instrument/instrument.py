@@ -19,6 +19,8 @@ from measure import Measure
 from sample import Sample
 from cPickle import dumps
 
+from twisted.internet import reactor, task
+
 def isRunning(func):
     """Is running? decorator. Immediately return False if test is no longer running, or true if this is a device."""
     @functools.wraps(func)
@@ -93,7 +95,6 @@ class Instrument(device.Measurer, device.Device):
         self.measure_cls(self, 'measure')
         self.log.debug('POST DEVICES', self.devices)
         # Il metodo set_nSamples di measure deve richiamare set_nSamples di
-        # self
         self.measure.set_nSamples = self.set_nSamples
         self.summarized = 0
         self['name'] = self.name
@@ -184,6 +185,7 @@ class Instrument(device.Measurer, device.Device):
                 self.log.debug('No sample object nr.%i' % i)
                 break
             self.log.debug('Closing sample object nr.%i' % i)
+            #task.deferLater(reactor, 10, smp.close)
             smp.close()
             del smp
             self.subHandlers.pop(name, False)
