@@ -164,13 +164,11 @@ class SharedMemoryLock(object):
 
     def refresh(self):
         """Refresh free addresses set"""
-        print('REFRESH', len(self.free))
         self.free = set()
         for i, lock in enumerate(self.locks):
             if lock.value == LOCK_FR:
                 self.free.add(i)
         assert len(self.free) > 0, 'OUT OF FREE LOCK ADDRESSES!'
-        print('FREE', len(self.free))
 
     def new(self, path):
         """Init a new lock on `path`"""
