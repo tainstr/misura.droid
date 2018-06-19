@@ -15,6 +15,7 @@ conf = [
      "max": 20,     "current": 1, "type": 'Integer'},
     {"handle": 'frame',     "name": 'Last frame',
         "attr": ['Runtime', 'History'], "type": 'Image'},
+
     {"handle": 'profile',   "name": 'Last profile',
      "current": [(), [], []], "attr": ['Runtime', 'History', 'Hidden'], "type": 'Profile'},
     {"handle": 'filteredProfile',   "name": 'Last profile',
@@ -23,6 +24,7 @@ conf = [
         "current": True, "type": 'Boolean'},
     {"handle": 'recProfile', "name": 'Record profiles',
         "current": True, "type": 'Boolean'},
+
 ]
 
 
@@ -97,6 +99,14 @@ class Sample(device.Device):
     def set_recFrame(self, val):
         """By setting recFrame, History attribute on frame option is accordingly added or removed."""
         return self.set_History_attr('frame', val)
+    
+    def get_recPreFrame(self):
+        """The value of recFrame depends on the presence of History attribute on frame option."""
+        return self.get_History_attr('preframe')
+
+    def set_recPreFrame(self, val):
+        """By setting recFrame, History attribute on frame option is accordingly added or removed."""
+        return self.set_History_attr('preframe', val)
 
     def get_recProfile(self):
         """The value of recProfile depends on the presence of History attribute on profile option."""

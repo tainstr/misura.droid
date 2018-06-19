@@ -241,7 +241,7 @@ def clean_cache(obj):
         # remove and close the first inserted item
         oldp, oldfd = obj.cache.popitem(False)
         os.close(oldfd)
-    locker.refresh()
+    #locker.refresh()
     return i
 
 
