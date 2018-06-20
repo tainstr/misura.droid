@@ -73,6 +73,8 @@ class DirShelf(FileBuffer):
         if newmeta:
             val = deepcopy(val)
             cur = val.pop('current')
+            if val['type']=='Empty':
+                val.pop('factory_default')
             if val['handle'] != key:
                 print('Handle mismatch: {} {} {}'.format(key, val['handle'], self.dir))
                 val['handle'] = key
