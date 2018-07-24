@@ -152,7 +152,7 @@ class BaseServer(device.Device):
             self['delayStart'] = False
         elif self['delayStart'] and delay > 0:
             d = delay - self.time()
-            if -120 < d < 0 or T<delayT:
+            if -120 < d < 0 or (T<delayT and delayT>0):
                 if test_in_progress == 0:
                     self.log.info('Delayed start:', self['lastInstrument'], self['delay'], self['delayT'])
                     ins.start_acquisition(userName=ins.measure['operator'])
