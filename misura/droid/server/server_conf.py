@@ -69,6 +69,9 @@ conf = [
         "type": 'Boolean', "current": False, "attr": ['Runtime']},
     {"handle": 'delay', "name": 'Delayed start date',
         "writeLevel": 1, "type": 'Time', "attr": ['Runtime']},
+    {"handle": 'delayT', "name": 'Delayed temperature', "unit": 'celsius',
+        'current': -1, "min":-1, "max": 1200,
+        "writeLevel": 1, "type": 'Float', "attr": ['Runtime']},
     {"handle": 'timeDelta', "name": 'Hardware clock time delta (UTC)','unit': 'second',
         "attr": ['Runtime'], "type": 'Float'},
     # error (Errors)

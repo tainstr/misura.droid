@@ -132,6 +132,8 @@ class BaseServer(device.Device):
         test_in_progress = ins and (ins['running'] + ins['initTest'] + ins['closingTest'] + ins['initializing'])
 
         delay = self['delay']
+        delayT = self['delayT']
+        T = self.kiln['T']
         last_client_access_time = self['lastClientAccessTime']
         auto_shutdown_interval = self['autoShutdownInterval']
 
@@ -150,19 +152,20 @@ class BaseServer(device.Device):
             self['delayStart'] = False
         elif self['delayStart'] and delay > 0:
             d = delay - self.time()
-            if -120 < d < 0:
+            if -120 < d < 0 or T<delayT:
                 if test_in_progress == 0:
-                    self.log.info('Delayed start:', self['lastInstrument'])
+                    self.log.info('Delayed start:', self['lastInstrument'], self['delay'], self['delayT'])
                     ins.start_acquisition(userName=ins.measure['operator'])
                     self['delay'] = 0
+                    self['delayT'] = -1
                     self['delayStart'] = False
                     return True
                 else:
                     self.log.warning('Delayed start cannot be applied: {}, {}, {}, {}'.format(
                         ins['running'],  ins['initTest'],  ins['closingTest'],  ins['initializing']))
             elif d > 0:
-                self.log.debug('Waiting for delayed start of {}. Remaining {}min'
-                               .format(self['lastInstrument'], int(d / 60)))
+                self.log.debug('Waiting for delayed start of {}. Remaining {}min. Target T: {}, current: {}'
+                               .format(self['lastInstrument'], int(d / 60), delayT, T))
             else:
                 self.log.error('Delayed start timed out.', d)
                 self['delay'] = 0
