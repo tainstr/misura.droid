@@ -87,6 +87,7 @@ class OutputFile(indexer.SharedFile):
     def close(self):
         """Implicitly call self.stop()"""
         self.stop()
+        self.header(refresh=True)
         return indexer.SharedFile.close(self)
 
     @lockme()
