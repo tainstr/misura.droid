@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
 import unittest
 from time import time
 
@@ -9,14 +8,16 @@ from cPickle import dumps
 
 props = {'a': {'handle': 'a', 'type': 'Object', 'current': [1, 2]}}
 
+dpath = '/dev/shm/misura_test/ds'
 
 class DirShelf(unittest.TestCase):
 
     def setUp(self):
-        self.d = dirshelf.DirShelf('/dev/shm/misura_test/ds', 'dirshelf')
+        self.d = dirshelf.DirShelf(dpath, 'dirshelf')
 
     def tearDown(self):
         self.d.close()
+        self.d.cache.clear()
         
     def test_dump(self):
         dumps(self.d)
@@ -33,7 +34,6 @@ class DirShelf(unittest.TestCase):
         d.set('a', 1, newmeta=False)
         t = time()
         d.set('a', 2, newmeta=False)
-
         self.assertEqual(d.info[:2], (0, 2))
         self.assertAlmostEqual(d.info[2], t, delta=0.001)
         d.set('a', 3, newmeta=False)

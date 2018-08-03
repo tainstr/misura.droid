@@ -42,7 +42,7 @@ class Conf(PersistentConf):
     
 
     def close(self):
-        print 'Conf.close', self.desc
+        print('Conf.close', self.desc)
         self.desc.close()
 
     @property
@@ -94,12 +94,12 @@ class Conf(PersistentConf):
             try:
                 par = set(e['attr'] + [e['type']])
             except:
-                print 'describe:', k, e
+                print('describe:', k, e)
                 raise
             entry = e.entry
             # Update to current values
             if self.desc[k]['current'] is None:
-                print 'Found None value', k
+                print('Found None value', k)
                 entry['current'] = 'None'
             # Replace with factory default if type/attr is not requested
             if len(par - excl) < len(par):
