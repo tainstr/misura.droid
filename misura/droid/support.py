@@ -33,13 +33,14 @@ def get_lib_info():
         out += '{} -> {}\n'.format(p, elf[i:e])
     return out
 
+
 def parse_vmstat():
     if params.isWindows:
         return {}
     vm = {}
     r = go('vmstat -s -S M')[1]
-    r=r.replace('  ','').replace('  ','').replace('\n ','\n')
-    if r[0]==' ': r = r[1:]
+    r = r.replace('  ', '').replace('  ', '').replace('\n ', '\n')
+    if r[0] == ' ': r = r[1:]
     for line in r.splitlines():
         line = line.split(' ')
         val = int(line.pop(0))
@@ -47,10 +48,13 @@ def parse_vmstat():
         vm[key] = val
     return vm
 
+
 tar_log_limit = 1000000
+
 
 def get_today_string():
     return datetime.datetime.now().strftime("%Y_%m_%d_%H-%M-%S")
+
 
 class Support(device.Device):
 
@@ -59,7 +63,7 @@ class Support(device.Device):
     conf_def = deepcopy(device.Device.conf_def)
     conf_def += [
         # Conf Backups
-        {"handle": 'stopUI', "name": 'Stop embedded UI', "current": False, "type": 'Boolean',"writeLevel":5},
+        {"handle": 'stopUI', "name": 'Stop embedded UI', "current": False, "type": 'Boolean', "writeLevel":5},
         {"handle": u'logs', "name": u'Log archive',
             "type": 'FileList', 'attr': ['Runtime']},
         {"handle": u'doLogs', "name": u'Refresh log archive',
@@ -136,7 +140,7 @@ class Support(device.Device):
             "attr":['ReadOnly', 'Runtime'], "type": 'Float'},
         {"handle": u'sys_temp', "name": u'CPU Temperature', "unit": 'celsius',
             "attr":['ReadOnly', 'History'], "type": 'Float'},
-        {"handle": u'sys_time', "name": u'Last system read', 
+        {"handle": u'sys_time', "name": u'Last system read',
             "attr":['ReadOnly', 'Runtime'], "type": 'Time'},
         
     ]
@@ -152,7 +156,6 @@ class Support(device.Device):
         self.vmstat()
         if os.path.exists(params.version_file):
             self['versionString'] = open(params.version_file, 'r').read()
-
             
     def set_stopUI(self, val):
         if val:
@@ -183,7 +186,7 @@ class Support(device.Device):
         outfile1 = outfile
         while os.path.exists(outfile1 + '.tar.bz2'):
             if overwrite:
-                os.remove(outfile1+ '.tar.bz2')
+                os.remove(outfile1 + '.tar.bz2')
                 break
             outfile1 = '{}_{}'.format(outfile, n)
             n += 1
@@ -196,7 +199,20 @@ class Support(device.Device):
             self.log.debug('Truncating backup output', len(msg))
             msg = msg[:tar_log_limit] + '\n...[truncated]...'
         self.log.info('New backup was successful. These files were archived:', r[0], msg)
-        return outfile1+'.tar.bz2', msg
+        return outfile1 + '.tar.bz2', msg
+    
+    def check_tar(self, source):
+        # Check integrity of the data
+        cmd = 'tar -tf "{}"'.format(source)
+        r = go(cmd)
+        if r[0] != 0:
+            msg = r[1]
+            if len(msg) > 300:
+                msg = '...[truncated]...\n' + msg[-300:]
+            self.log.critical('Package is defective. Restore aborted!\n', msg)
+            return False, 'INVALID ARCHIVE!!! \n' + msg 
+        self.log.debug('Valid archive', source)
+        return True, 'Valid archive'
 
     def do_restore(self, source, dest):
         """Generalized restore. Returns status and message."""
@@ -205,6 +221,10 @@ class Support(device.Device):
         if not os.path.exists(source):
             self.log.error('Selected backup file does not exist:', source)
             return False, 'Selected backup does not exist: ' + source
+        r, msg = self.check_tar(source)
+        if not r:
+            self.log.critical('do_restore: Invalid archive. Aborted.')
+            return False, msg
         # As config is stored with absolute paths, a simple untar should
         # restore everything
         cmd = 'tar -C "{}" -xvf "{}"'.format(dest, source)
@@ -219,8 +239,8 @@ class Support(device.Device):
         return True, msg
     
     def save_last_version_info(self, prefix, package_name):
-        self[prefix+'Package'] = package_name
-        self[prefix+'Date'] = get_today_string()
+        self[prefix + 'Package'] = package_name
+        self[prefix + 'Date'] = get_today_string()
         self.save('default')     
 
     def get_doBackup(self):
@@ -233,7 +253,7 @@ class Support(device.Device):
     def get_doLogs(self):
         """Perform logs backup."""
         odir = self.desc.getConf_dir() + 'logs/'
-        outfile, msg = self.do_backup(params.confdir+'data/log/', odir, outfile='logs', overwrite=True)
+        outfile, msg = self.do_backup(params.confdir + 'data/log/', odir, outfile='logs', overwrite=True)
         self['logs'] = os.path.basename(outfile)
         return msg
 
@@ -242,7 +262,7 @@ class Support(device.Device):
         source = self.desc.getConf_dir() + 'backups/' + self['backups']
         status, msg = self.do_restore(source, params.confdir)
         if status:
-            self.save_last_version_info('backup', 'backups://'+self['backups'])
+            self.save_last_version_info('backup', 'backups://' + self['backups'])
         return msg
 
     def get_doExeBackup(self):
@@ -257,7 +277,7 @@ class Support(device.Device):
         source = self.desc.getConf_dir() + 'exeBackups/' + self['exeBackups']
         status, msg = self.do_restore(source, self.project_root())
         if status:
-            self.save_last_version_info('version', 'exeBackups://'+self['exeBackups'])
+            self.save_last_version_info('version', 'exeBackups://' + self['exeBackups'])
         return msg
 
     def get_applyExe(self):
@@ -274,6 +294,10 @@ class Support(device.Device):
             self.log.error(msg)
             os.remove(source)
             return msg
+        r, msg = self.check_tar(source)
+        if not r:
+            self.log.critical('get_applyExe: aborted!')
+            return msg 
         # Prepare number of steps
         self.setattr('upgradeProgress', 'max', 4)
         # Tell the main server which operation is in progress
@@ -286,6 +310,7 @@ class Support(device.Device):
         self.get_doBackup()
         self['upgradeProgress'] = 3
         # Clean the project root
+        #TODO: move, do not delete
         r = go('find "{0}" -name "*.pyc" -delete ; mkdir -pv {0}'.format(self.project_root()))
         self.log.debug('Cleaned current version', r[1])
         # Lastly, restore to the selected exe version
@@ -294,11 +319,11 @@ class Support(device.Device):
         self['upgradeProgress'] = 0
         if status:
             msg = 'Upgrade to {} finished successfully. \nPlease restart Misura to apply it!\n'.format(self['packages'])
-            self.save_last_version_info('version', 'packages://'+self['packages'])
+            self.save_last_version_info('version', 'packages://' + self['packages'])
         else:
             msg = 'Failed to upgrade to {}!\n'.format(self['packages'])
         self.log.critical(msg)
-        return r+msg
+        return r + msg
 
     def get_version(self):
         """Get current misura version"""
@@ -316,7 +341,7 @@ class Support(device.Device):
         return r[1]
     
     def get_dmesg(self):
-        if os.name=='nt':
+        if os.name == 'nt':
             return 'NotImplemented'
         s, out = go('dmesg')
         return out
@@ -346,33 +371,32 @@ class Support(device.Device):
     def vmstat(self):
         if params.isWindows:
             return {}
-        vm=parse_vmstat()
-        t=time()
+        vm = parse_vmstat()
+        t = time()
         self['sys_ram'] = vm['M total memory']
         self['sys_swap'] = vm['M total swap']
-        self['sys_usedRam'] = 100.*vm['M used memory']/vm['M total memory']
+        self['sys_usedRam'] = 100.*vm['M used memory'] / vm['M total memory']
         if vm['M total swap']:
-            self['sys_usedSwap'] = 100.*vm['M used swap']/vm['M total swap']
+            self['sys_usedSwap'] = 100.*vm['M used swap'] / vm['M total swap']
         cpu = [vm[k] for k in ['non-nice user cpu ticks',
                                'nice user cpu ticks',
                                'IO-wait cpu ticks',
                                'IRQ cpu ticks',
                                'softirq cpu ticks',
                                'stolen cpu ticks']]
-        dt = t-self['sys_time']
-        if dt<0:
+        dt = t - self['sys_time']
+        if dt < 0:
             self['sys_time'] = t
             return vm
         
         cpu = sum(cpu)
-        dcpu = cpu-self['sys_cpuTicks']
-        didle = vm['idle cpu ticks']-self['sys_cpuTicksIdle']
-        self['sys_cpu'] = 100.*dcpu/(dcpu+didle)
+        dcpu = cpu - self['sys_cpuTicks']
+        didle = vm['idle cpu ticks'] - self['sys_cpuTicksIdle']
+        self['sys_cpu'] = 100.*dcpu / (dcpu + didle)
         self['sys_time'] = t
         self['sys_cpuTicks'] = cpu
         self['sys_cpuTicksIdle'] = vm['idle cpu ticks']
         return vm
-        
     
     def get_sys_usedRam(self):
         self.vmstat()
@@ -391,15 +415,13 @@ class Support(device.Device):
         if params.isWindows:
             return 0
         st, msg = go('cat /sys/class/thermal/thermal_zone*/temp')
-        if st!=0:
+        if st != 0:
             return 0
         temps = map(float, msg.splitlines())
-        return max(temps)/1000.0
+        return max(temps) / 1000.0
     
     def check(self):
         self.vmstat()
         self['sys_temp'] = self.get_sys_temp()
         return super(Support, self).check()
-
-    
 
