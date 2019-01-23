@@ -202,7 +202,13 @@ class Measure(device.Device):
 
     def set_name(self, tn):
         """Option `name` must be a valid file name."""
+        old = self.desc.get('name')
         tn = validate_filename(tn)
+        smps = list(self.parent().iter_samples())
+        if len(smps)==1:
+            smp = smps[0]
+            if smp['name'] in ('Sample n. 0', old):
+                smp['name'] = tn
         return tn
 
     def get_elapsed(self):

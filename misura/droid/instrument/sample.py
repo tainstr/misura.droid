@@ -56,7 +56,7 @@ class Sample(device.Device):
                                   suffixes=[])              # no suffixes
             part['name'] = 'Part ' + suffix
             self.samples.append(part)
-        print 'Sample parts', self.devices
+        
         self['recFrame'] = False
 
     def set_roi(self, roi):
