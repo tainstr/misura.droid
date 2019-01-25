@@ -134,6 +134,7 @@ class Instrument(device.Measurer, device.Device):
         smp = self.sample_cls(parent=self, node=node)
         smp['name'] = 'Sample n. %i' % n
         smp.env.hdf = self.outFile
+        smp['idx'] = n
         return smp
 
     @initializeme(repeatable=True)
