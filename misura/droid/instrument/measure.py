@@ -6,6 +6,7 @@ from copy import deepcopy
 
 from misura.canon.csutil import utime, validate_filename
 from misura.droid import device
+from twisted.conch.scripts.conch import old
 
 
 conf = [
@@ -205,10 +206,18 @@ class Measure(device.Device):
         old = self.desc.get('name')
         tn = validate_filename(tn)
         smps = list(self.parent().iter_samples())
-        if len(smps)==1:
-            smp = smps[0]
-            if smp['name'] in ('Sample n. 0', old):
-                smp['name'] = tn
+        N = len(smps)
+        for smp in smps:
+            n = smp['devpath'][6:]
+            old1 = old
+            if N>1:
+                old1 += ' '+n
+            if smp['name'] in ('Sample n. '+n, old1):
+                sn = tn
+                if N>1:
+                    sn += ' '+n
+                print('Autoname', n, tn, sn)
+                smp['name'] = sn
         return tn
 
     def get_elapsed(self):
