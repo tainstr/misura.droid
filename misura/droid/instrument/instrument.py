@@ -247,7 +247,7 @@ class Instrument(device.Measurer, device.Device):
         """Retrieve configured roles and make their objects available as local attributes"""
         print 'mapRoleDev init'
         if self['initializing'] and not self['initInstrument']:
-            self.log.error(
+            self.log.info(
                 'mapRoleDev: Cannot map devices to roles while still initializing!')
             return False
         if self.root_isRunning or self['closingTest']:
