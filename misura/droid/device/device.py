@@ -223,7 +223,7 @@ class Device(option.Aggregative, milang.Scriptable, Node):
         self.log.debug('map_role_dev', handle, cur, isIO)
         # Identify invalid, incomplete, empty configurations
         if path in ['None', None]:
-            self.log.error('Un-set Role configuration for:', handle, cur)
+            self.log.info('Un-set Role configuration for:', handle, cur)
             cur[0] = 'None'  # avoid None
             cur[1] = 'default'
             if isIO:
