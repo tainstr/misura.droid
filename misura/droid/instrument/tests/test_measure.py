@@ -21,8 +21,8 @@ class Measure(unittest.TestCase):
         self.ins['analysis'] = True
         instruments = {}
         for ins in ['', 'hsm', 'flex']:
-            itrm = instrument.measure.Measure(node='measure')
-            itrm._parent = self.ins
+            itrm = instrument.measure.Measure(node='measure', parent=self.ins)
+            #itrm._parent = self.ins
             itrm.outFile = self.stor
             itrm.env.hdf = self.stor
             instruments[ins] = itrm
