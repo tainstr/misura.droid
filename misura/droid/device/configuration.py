@@ -136,6 +136,8 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
     def get_preset(self, *a, **k): return self.desc.get_preset(*a, **k)
 
     def sete(self, *a, **k): return self.desc.sete(*a, **k)
+    
+    def hasattr(self, *a, **k): return self.desc.hasattr(*a, **k)
 
     def getattr(self, *a, **k): return self.desc.getattr(*a, **k)
 
@@ -166,6 +168,8 @@ class ConfigurationInterface(xmlrpc.XMLRPC, object):
     def xmlrpc_has_key(self, *a, **k): return self.desc.has_key(*a, **k)
 
     def xmlrpc_keys(self, *a, **k): return self.desc.keys(*a, **k)
+    
+    def xmlrpc_hasattr(self, *a, **k): return self.hasattr(*a, **k)
 
     def xmlrpc_getattr(self, *a, **k): return self.getattr(*a, **k)
 
