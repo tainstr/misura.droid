@@ -10,7 +10,7 @@ from misura.canon import csutil
 from misura.droid import share
 from misura.droid import data
 from misura.droid import utils
-
+from misura import utils_testing as ut
 
 
 @unittest.skip('')
@@ -130,7 +130,7 @@ class Parallel(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        #ut.parallel(0)
+        ut.parallel(0)
         pass
 
     def test_onoff(self):

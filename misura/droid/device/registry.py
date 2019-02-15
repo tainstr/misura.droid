@@ -33,6 +33,12 @@ class DevicePathRegistry(object):
         self.shelf.idx_entries = 1
         # Set current description
         self.shelf.update(conf_def)
+        
+    def close(self):
+        self.shelf.close()
+        
+    def __del__(self):
+        self.close()
 
     def __getitem__(self, key):
         return self.shelf.get(key, meta=False)

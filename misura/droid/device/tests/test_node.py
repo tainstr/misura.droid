@@ -3,7 +3,7 @@
 import unittest
 import os
 from misura.canon.option import ao
-
+from misura import utils_testing as ut
 from misura.droid import device
 from misura.droid import parameters as params
 from . import testdir
@@ -16,7 +16,7 @@ print('Importing', __name__)
 
 def setUpModule():
     print('Starting', __name__)
-    #ut.parallel(1)
+    ut.parallel(0)
 
 
 def tearDownModule():
