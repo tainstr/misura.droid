@@ -204,7 +204,11 @@ class SharedMemoryLock(object):
         """Reset the locker. Use only for unit testing"""
         for lk in self.locks:
             lk.value = LOCK_FR
+        for path in self.cache:
+            if os.path.exists(path+'.lk'):
+                os.remove(path+'.lk')
         self.cache = {}
+        self.free = set(range(len(self.locks)))
         
 
 
