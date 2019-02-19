@@ -154,7 +154,8 @@ class Serial(UDevice):
             self.log.debug('Try baudrate:', br)
             if self.connect_baudrate(baudrate=br):
                 return True
-        self.com.close()
+        if self.com:
+            self.com.close()
         return False
 
     def validate_connection(self):

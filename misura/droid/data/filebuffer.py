@@ -207,6 +207,8 @@ class SharedMemoryLock(object):
         for path in self.cache:
             if os.path.exists(path+'.lk'):
                 os.remove(path+'.lk')
+            if os.path.exists(path):
+                os.remove(path)
         self.cache = {}
         self.free = set(range(len(self.locks)))
         
