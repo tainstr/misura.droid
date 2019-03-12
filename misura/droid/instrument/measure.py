@@ -6,7 +6,6 @@ from copy import deepcopy
 
 from misura.canon.csutil import utime, validate_filename
 from misura.droid import device
-from twisted.conch.scripts.conch import old
 
 
 conf = [
