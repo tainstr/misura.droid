@@ -9,7 +9,7 @@ from misura.droid import device
 
 
 conf = [
-    {"handle": 'operator', "name": "Operator",
+    {"handle": 'operator', "name": "Operator", "attr":['ReadOnly'],
      "current": 'unknown', "type": 'String'},
     {"handle": 'flavour', "name": 'Type',
         "current": 'Standard', "type": 'Chooser',
